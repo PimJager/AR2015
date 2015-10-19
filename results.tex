@@ -1,0 +1,229 @@
+\documentclass[12pt]{article}
+\usepackage{a4wide}
+\usepackage{latexsym}
+\usepackage{amssymb}
+\usepackage{epic}
+\usepackage{graphicx}
+\usepackage[shortlabels]{enumitem}
+%\pagestyle{empty}
+\newcommand{\tr}{\mbox{\sf true}}
+\newcommand{\fa}{\mbox{\sf false}}
+\newcommand{\bimp}{\leftrightarrow}
+
+
+\begin{document}
+
+\section*{Automated Reasoning - Assignment series 1 }
+
+\begin{center}
+P.T. Jager, BSc. \\
+Radboud universiteit Nijmegen\\
+email: {\tt p.jager@student.ru.nl}
+\end{center}
+
+\subsection*{Problem 1: Magic factory}
+
+Six trucks have to deliver various obscure building blocks to a special 
+factory. There are five types of building blocks:
+\begin{enumerate}[(a)]
+	\item Nuzzles - 4 pallets - 700 kg 
+	\item Skipples - 8 pallets - 1000 kg - \textit{Need to be cooled in
+		one of the two cooled trucks}
+	\item Crottles - 10 pallets - 1500 kg - \textit{Can not be in the same truck
+		as Prittles}
+	\item Dupples - 5 pallets - 100 kg - \textit{Not more than 2 pallets per
+		truck}
+	\item Prittles - $\geq 1$ pallets - 800 kg - \textit{Can not be in same 
+		truck as Crottles}
+\end{enumerate}
+All trucks can cary a maximum of 8 pallets or 7800 kg (whichever is reached 
+first.)
+What is the maximum number of Prittles that can be delivered and how would the
+pallets be divided over the 6 trucks?
+
+For a complete description of the problem please see assignment. 
+
+\subsubsection*{Solution:}
+
+We generalize the solution for any $a$ Nuzzles, $b$ Skipples, $c$ Crottles, 
+$d$ Dupples, $e$ Prittles and $n$ trucks.
+
+For doing so we introduce $f*a + f*b + f*c + f*d + f*e$ variables which 
+represent each possible pallet in each possible truck: 
+\begin{enumerate}[(a)]
+	\item $nuzzle_{tn}$ for $t=1,\ldots,f$ and $n=1,\ldots,a$
+	\item $skipple_{tn}$ for $t=1,\ldots,f$ and $n=1,\ldots,b$
+	\item $crottle_{tn}$ for $t=1,\ldots,f$ and $n=1,\ldots,c$
+	\item $dupple_{tn}$ for $t=1,\ldots,f$ and $n=1,\ldots,d$
+	\item $prittle_{tn}$ for $t=1,\ldots,f$ and $n=1,\ldots,a$
+\end{enumerate}
+All of these variables are either $0$ or $1$, when the $nuzzle_{tn}$ 
+is $1$ for some $t,n$ then nuzzle $n$ is in truck $t$. Similar for the other 
+building blocks.
+
+
+We generalize this problem to putting $n$ queens on an $n \times n$
+chess board, for any $n \geq 1$, with the same restriction that no 
+two share a colum, row or diagonal.
+
+For doing so, we introduce $n^2$  
+ boolean variables $p_{ij}$ for $i,j = 1,\ldots,n$, where for 
+every $i,j = 1,\ldots,n$ the value of $p_{ij}$ will be true if and
+only if a queen will be put on position $(i,j)$, that is, in the
+$i$-th row and in the $j$-th column.
+
+As we have to put exactly $n$ queens, and no two are allowed to be
+on the same row, every row should contain at least one queen. For
+row $i$ this is expressed by the formula
+\[ \bigvee_{j=1}^n p_{ij}.\]
+In a similar way every column should contain at least one queen;
+for column $j$ this is expressed by the formula 
+\[ \bigvee_{i=1}^n p_{ij}.\]
+Next we express that every row contains at most one queen, that
+is, for every two distinct positions $j,k$ it is not allowed that
+both $p_{ij}$ and $p_{ik}$ are true. For row $i$ this is expressed
+by the formula
+\[ \bigwedge_{j,k:1 \leq j < k \leq n} \neg p_{ij} \vee \neg p_{ik}.\]
+Similarly, every column should contain at most one queen;
+for column $j$ this is expressed by the formula 
+\[ \bigwedge_{i,k:1 \leq i < k \leq n} \neg p_{ij} \vee \neg p_{kj} \]
+Finally, we consider the requirements on diagonals. Two positions
+$(i,j)$ and $(k,m)$ are on the same diagonal in the one direction
+if and only if $i+k = j+m$, and they are on the same diagonal in 
+the other direction if and only if $i-k = j-m$. For every pair of
+such positions it is not allowed that they are both occupied by a
+queen, so we require
+\[ \neg p_{ij} \vee \neg p_{km}.\]
+The total formula now consists of the conjunction of all these
+ingredients, that is, 
+\[ \bigwedge_{i=1}^n (\bigvee_{j=1}^n p_{ij}) \;\; \wedge \]
+\[ \bigwedge_{j=1}^n (\bigvee_{i=1}^n p_{ij}) \;\; \wedge \]
+\[  \bigwedge_{i=1}^n (\bigwedge_{j,k:1 \leq j < k \leq n} \neg 
+p_{ij} \vee \neg p_{ik}) \;\; \wedge \]
+\[ \bigwedge_{j=1}^n ( \bigwedge_{i,k:1 \leq i < k \leq n} \neg p_{ij}
+\vee \neg p_{kj}) \;\; \wedge \]
+\[ \bigwedge_{i,k:1 \leq i < k \leq n} ( \bigwedge_{j,m: i+k = j+m \vee
+i-k = j-m} \neg p_{ij} \vee \neg p_{km}) \]
+
+This formula is easily expressed in SMT syntax, for instance, for
+$n=8$ one can generate
+
+{\footnotesize
+
+{\tt (benchmark test.smt}
+
+{\tt :extrapreds (}
+
+{\tt (p11) (p12) (p13) (p14) (p15) (p16) (p17) (p18) }
+
+{\tt (p21) (p22) (p23) (p24) (p25) (p26) (p27) (p28) }
+
+{\tt (p31) (p32) (p33) (p34) (p35) (p36) (p37) (p38) }
+
+{\tt (p41) (p42) (p43) (p44) (p45) (p46) (p47) (p48) }
+
+{\tt (p51) (p52) (p53) (p54) (p55) (p56) (p57) (p58) }
+
+{\tt (p61) (p62) (p63) (p64) (p65) (p66) (p67) (p68) }
+
+{\tt (p71) (p72) (p73) (p74) (p75) (p76) (p77) (p78) }
+
+{\tt (p81) (p82) (p83) (p84) (p85) (p86) (p87) (p88) }
+
+{\tt )}
+
+{\tt :formula}
+
+{\tt   (and}
+
+{\tt (or (p11) (p12) (p13) (p14) (p15) (p16) (p17) (p18) )}
+
+{\tt (or (p21) (p22) (p23) (p24) (p25) (p26) (p27) (p28) )}
+
+$\cdots \cdots$
+
+{\tt (or (not p11) (not p12)) }
+
+{\tt (or (not p11) (not p13)) }
+
+$\cdots \cdots$
+
+{\tt )) }
+}
+
+Applying {\tt yices -e -smt test.smt} yields the following result
+within a fraction of a second:
+
+{\footnotesize
+
+{\tt sat }
+
+{\tt (= p11 false)}
+
+{\tt (= p12 false)}
+
+{\tt (= p13 false)}
+
+{\tt (= p14 true)}
+
+{\tt (= p15 false)}
+
+{\tt (= p16 false)}
+
+{\tt (= p17 false)}
+
+{\tt (= p18 false)}
+
+{\tt (= p21 false)}
+
+{\tt (= p22 true)}
+
+{\tt (= p23 false)}
+
+$\cdots \cdots$ }.
+
+The values that are are true are $p_{14}, p_{22}, p_{37}, p_{43},
+p_{56}, p_{68}, p_{75}, p_{81}$. Expressed in a picture this
+yields
+
+\vspace{3mm}
+
+
+
+\vspace{3mm}
+
+We check that indeed there are eight queens for which no two are
+on the same row, column or diagonal.
+
+\vspace{3mm}
+
+{\bf Remark:} 
+
+Our formula contains some redundancy: the requirement that every
+row contains exactly one queen implies that there are exactly $n$
+queens in total. By expressing that every column contains at least
+one queen, from this property one concludes that also every column
+contains at most one queen. We chose for this redundancy for
+keeping the symmetry in the solution, and also following the
+general strategy that introducing redundancy is often good for
+efficiency.
+
+\vspace{3mm}
+
+{\bf Generalization:} 
+
+As we generalized our approach for $n$ rather than 8, it is
+interesting to see what happens for other values of $n$. For $n
+> 10$ we have to take care of the notation: if we keep the
+notation then it is not clear whether {\tt p111} represents 
+$p_{1,11}$ or $p_{11,1}$. This is solved by putting an extra 
+symbol between the two numbers. 
+
+For $n=3$ the resulting formula is unsatisfiable, showing that
+there is no solution. For $n = 4,5,6,\ldots$ the formula is
+satisfiable, by which is a solution of the problem is found.
+Efficiency is not a problem: for $n = 60$ there are 3600
+variables and the formula consists of over 350,000 clauses, but 
+still {\tt yices} succeeds in finding a solution within a few
+seconds.
+\end{document}
