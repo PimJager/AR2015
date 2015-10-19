@@ -48,6 +48,20 @@ varRange = do
         range p     = mapM_ (\n -> mapM_ (\t -> range' p t n) [1..num_trucks]) [1..p_count p]
         range' p t n= tell "(assert( and(<= 0 " >> tell (pallet p t n) >> tell ") (<= " >> tell (pallet p t n) >> tellLn " 1)))"
 
+unique :: YicesWriter
+unique = do
+    tellLn ";; All pallets can be in only _one_ truck"
+    mapM_ pallets allPallets
+    tellLn ""
+    where
+        pallets :: Pallet -> YicesWriter
+        pallets p  =    tell "(assert (and "
+                    >>  mapM_ (trucks p) [1..p_count p]
+                    >>  tellLn "))"
+        trucks :: Pallet -> Int -> YicesWriter
+        trucks p n =    tell "(= (+"
+                    >>  mapM_ (\t-> tell " " >> tell (pallet p t n)) [1..num_trucks]
+                    >>  tellLn ") 1)"
 
 amount :: YicesWriter
 amount = do
@@ -98,7 +112,7 @@ expensive = do
     mapM_ trucks [1..num_trucks]
     tellLn ""
     where 
-        trucks t =      tell "(assert (<= (+"
+        trucks t =      tellLn "(assert (<= (+"
                     >>  mapM_ (\n -> tell " " >> tell (pallet dupple t n)) [1..p_count dupple]
                     >>  tellLn ") 2 ))"
 
@@ -124,6 +138,7 @@ showModel = tellLn "(check)" >> tellLn "(show-model)"
 main = putStr $ T.unpack $ execWriter   (   defineVars 
                                         >>  varRange 
                                         >>  amount
+                                        >>  unique
                                         >>  capacityP 
                                         >>  capacityKG
                                         >>  cooled 
