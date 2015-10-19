@@ -6,7 +6,7 @@ import Data.Text as T
 import Control.Monad.Writer as W
 import Data.Char
 
-num_prittles    = 20
+num_prittles    = 18
 num_trucks      = 6
 capacity_kg     = 7800
 capacity_p      = 8
@@ -114,13 +114,12 @@ expensive = do
     where 
         trucks t =      tellLn "(assert (<= (+"
                     >>  mapM_ (\n -> tell " " >> tell (pallet dupple t n)) [1..p_count dupple]
-                    >>  tellLn ") 2 ))"
+                    >>  tellLn ") 1 ))"
 
 explosive :: YicesWriter
 explosive = do
     tellLn ";; Prittles and crottles can't be in the same truck"
     mapM_ (trucks_ crottle prittle) [1..num_trucks]
-    mapM_ (trucks_ prittle crottle) [1..num_trucks]
     tellLn ""
     where
         trucks_ :: Pallet -> Pallet -> Int -> YicesWriter
