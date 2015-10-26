@@ -83,8 +83,28 @@ heat cs = do
     mapM_ components [(c1,c2) | c1 <- cs, c2<-(delete c1 cs)]
     tellLn ""
     where
-        components (c1,c2) = do
-             
+        components (c1,c2) = 
+            tellLn  $ "\t (or (>= (abs (- " <<< x c1 <<< " " <<< x c2 <<< ")) 17) (>= (abs (- " <<< y c1 <<< " " <<< y c2 <<< ")) 17))"
+
+power :: [Component] -> [Component] -> YicesWriter
+power pcs rcs = do
+    tellLn "\t;; Alle components should have atleast 1 edge contact with a power component"
+    mapM_ regular rcs
+    tellLn ""
+    where
+        regular c = do
+            tellLn "\t (or "
+            mapM_ (power' c) pcs
+            tellLn "\t )"
+        power' rc pc = do
+            tellLn  $ "\t\t(or\t(and "
+            tellLn  $ "\t\t\t (<=  " <<< x pc <<< " " <<< x rc <<< ") (<= " <<< x rc <<< " (+ " <<< x pc <<< " " <<< w pc <<< "))"
+            tellLn  $ "\t\t\t (or (= " <<< y rc <<< "(+ " <<< y pc <<< " " <<< h pc <<< ")) (= " <<< y pc <<< "(+ " <<< y rc <<< " " <<< h rc <<< ")))"
+            tellLn  $ "\t\t\t)"
+            tellLn  $ "\t\t\t(and "
+            tellLn  $ "\t\t\t (<=  " <<< y pc <<< " " <<< y rc <<< ") (<= " <<< y rc <<< " (+ " <<< y pc <<< " " <<< y pc <<< "))"
+            tellLn  $ "\t\t\t (or (= " <<< x rc <<< "(+ " <<< x pc <<< " " <<< w pc <<< ")) (= " <<< x pc <<< "(+ " <<< x rc <<< " " <<< w rc <<< ")))"
+            tellLn "\t\t))"
 
 
 main = putStr $ T.unpack $ execWriter $ (variables (powerC++regularC) >> env)
@@ -100,5 +120,7 @@ main = putStr $ T.unpack $ execWriter $ (variables (powerC++regularC) >> env)
             dimensions (pc++rc)
             inside (pc++rc)
             overlap (pc++rc)
+            heat pc
+            power pc rc
             tellLn "  )"
         permuations = [(powerC, regularC)] -- todo: make permutations
