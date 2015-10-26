@@ -46,7 +46,7 @@ For a complete description of the problem please see assignment.
 \subsubsection*{Solution:}
 
 We generalize the solution for any $a$ Nuzzles, $b$ Skipples, $c$ Crottles, 
-$d$ Dupples, $e$ Prittles and $n$ trucks.
+$d$ Dupples, $e$ Prittles and $f$ trucks.
 
 For doing so we introduce $f*a + f*b + f*c + f*d + f*e$ variables which 
 represent each possible pallet in each possible truck: 
@@ -55,175 +55,204 @@ represent each possible pallet in each possible truck:
 	\item $skipple_{tn}$ for $t=1,\ldots,f$ and $n=1,\ldots,b$
 	\item $crottle_{tn}$ for $t=1,\ldots,f$ and $n=1,\ldots,c$
 	\item $dupple_{tn}$ for $t=1,\ldots,f$ and $n=1,\ldots,d$
-	\item $prittle_{tn}$ for $t=1,\ldots,f$ and $n=1,\ldots,a$
+	\item $prittle_{tn}$ for $t=1,\ldots,f$ and $n=1,\ldots,e$
 \end{enumerate}
 All of these variables are either $0$ or $1$, when the $nuzzle_{tn}$ 
 is $1$ for some $t,n$ then nuzzle $n$ is in truck $t$. Similar for the other 
 building blocks.
 
+\vspace{3mm}
 
-We generalize this problem to putting $n$ queens on an $n \times n$
-chess board, for any $n \geq 1$, with the same restriction that no 
-two share a colum, row or diagonal.
+In the following formulas we will use $blocks$ as a shorthand for ${nuzzle, 
+skipple, crottle, dupple, prittle}$ and use $p_{tn}$ with $p \in blocks$
+as a shorthand notation for eg. $nuzzle_{tn}$. The function $num(p)$ is assumed 
+to give the number of desired pallets to move of a certain block $p$, eg.
+$num(dupple) = d$. Similar, the function $weight(p)$ gives the weight of a 
+certain pallet $p$.
 
-For doing so, we introduce $n^2$  
- boolean variables $p_{ij}$ for $i,j = 1,\ldots,n$, where for 
-every $i,j = 1,\ldots,n$ the value of $p_{ij}$ will be true if and
-only if a queen will be put on position $(i,j)$, that is, in the
-$i$-th row and in the $j$-th column.
+\vspace{3mm}
 
-As we have to put exactly $n$ queens, and no two are allowed to be
-on the same row, every row should contain at least one queen. For
-row $i$ this is expressed by the formula
-\[ \bigvee_{j=1}^n p_{ij}.\]
-In a similar way every column should contain at least one queen;
-for column $j$ this is expressed by the formula 
-\[ \bigvee_{i=1}^n p_{ij}.\]
-Next we express that every row contains at most one queen, that
-is, for every two distinct positions $j,k$ it is not allowed that
-both $p_{ij}$ and $p_{ik}$ are true. For row $i$ this is expressed
-by the formula
-\[ \bigwedge_{j,k:1 \leq j < k \leq n} \neg p_{ij} \vee \neg p_{ik}.\]
-Similarly, every column should contain at most one queen;
-for column $j$ this is expressed by the formula 
-\[ \bigwedge_{i,k:1 \leq i < k \leq n} \neg p_{ij} \vee \neg p_{kj} \]
-Finally, we consider the requirements on diagonals. Two positions
-$(i,j)$ and $(k,m)$ are on the same diagonal in the one direction
-if and only if $i+k = j+m$, and they are on the same diagonal in 
-the other direction if and only if $i-k = j-m$. For every pair of
-such positions it is not allowed that they are both occupied by a
-queen, so we require
-\[ \neg p_{ij} \vee \neg p_{km}.\]
-The total formula now consists of the conjunction of all these
-ingredients, that is, 
-\[ \bigwedge_{i=1}^n (\bigvee_{j=1}^n p_{ij}) \;\; \wedge \]
-\[ \bigwedge_{j=1}^n (\bigvee_{i=1}^n p_{ij}) \;\; \wedge \]
-\[  \bigwedge_{i=1}^n (\bigwedge_{j,k:1 \leq j < k \leq n} \neg 
-p_{ij} \vee \neg p_{ik}) \;\; \wedge \]
-\[ \bigwedge_{j=1}^n ( \bigwedge_{i,k:1 \leq i < k \leq n} \neg p_{ij}
-\vee \neg p_{kj}) \;\; \wedge \]
-\[ \bigwedge_{i,k:1 \leq i < k \leq n} ( \bigwedge_{j,m: i+k = j+m \vee
-i-k = j-m} \neg p_{ij} \vee \neg p_{km}) \]
+For each building block the correct \emph{amount} of blocks need to be
+transported. This is expressed in formula
+\begin{equation} \label{eq:amount}
+  \bigwedge_p^{blocks} (\sum_{t=1}^{f} \sum_{n=1}^{num(p)} p_{tn} = num(p))
+\end{equation}
 
-This formula is easily expressed in SMT syntax, for instance, for
-$n=8$ one can generate
+The combined \emph{weight} of all pallets in an truck can not exceed 7800kg. 
+This is expressed in the formula
+\begin{equation} \label{eq:weight}
+ \bigwedge_t^f (\sum_p^{blocks} \sum_n^{num(p)} weight(p_{tn}) \leq 7800)
+\end{equation}
+
+Because all pallets have $f$ different positions they could be in (one for each
+truck), it is necessary to express that each \emph{distinct} pallet (numbered 
+$n$) is in exactly one truck.
+\begin{equation} \label{eq:distinct}
+  \bigwedge_p^{blocks} \bigwedge_n^{num(p)} (\sum_{t=1}^f p_{tn} = 1)
+\end{equation}
+
+The problem states that \emph{no 2 duples} can be in any truck. 
+That is, for each truck the number of duples should be $\leq 1$. 
+\begin{equation} \label{eq:valuable}
+  \bigwedge_{t=1}^f (\sum_{n=1}^d dupple_{tn} \leq 1)
+\end{equation}
+
+All Skipples should be in one of two \emph{cooled} trucks. We give these trucks
+numbers 1 and 2. 
+\begin{equation} \label{eq:cooled}
+  \sum_{t=1}^2 \sum_{n=1}^b p_{tn} = b
+\end{equation}
+
+All trucks should \emph{not contain Prittles if they contain Crottles}. That is,
+if the number of Crottles in a truck is $\geq 1$ then the number of Prittles 
+should be 0. If this
+property holds then the reverse is also true (since containment is commutative).
+When expressing this formula we use the function \emph{ite} (if-then-else) which
+evaluates to its second argument when the first one evaluates to $true$ and 
+evaluates to its third argument otherwise.
+\begin{equation} \label{eq:explosive}
+  \bigwedge_t^f ite 	(\sum_{n=1}^c crottle_{tn} \geq 1)\  
+						(\sum_{n=1}^e prittle_{tn} = 0)\ 
+						true 
+\end{equation}
+
+One additional needed constraint has to with the choice to represent $p_{tn}$
+as a number. This constraint states that all $p_{tn}$ are either 1 or 0, that is
+truck $t$ contains pallet $p$ numbered $n$ (1) or not (0).
+\begin{equation} \label{eq:range}
+  \bigwedge_p^{blocks} \bigwedge_{t=1}^f \bigwedge_{n=1}^{num(p)} 
+	p_{tn} = 0 \vee p_{tn} = 1
+\end{equation}
+
+The total formula consists of the conjunction of all these formulas, that is:
+\[ \bigwedge_p^{blocks} (\sum_{t=1}^{f} \sum_{n=1}^{num(p)} p_{tn} = num(p))
+	\;\; \wedge \]
+\[ \bigwedge_t^f (\sum_p^{blocks} \sum_n^{num(p)} weight(p_{tn}) \leq 7800)
+	\;\; \wedge \]
+\[ \bigwedge_p^{blocks} \bigwedge_n^{num(p)} (\sum_{t=1}^f p_{tn} = 1) 
+	\;\; \wedge \]
+\[ \bigwedge_{t=1}^f (\sum_{n=1}^d dupple_{tn} \leq 1) \;\; \wedge \]
+\[ \sum_{t=1}^2 \sum_{n=1}^b p_{tn} = b \;\; \wedge \]
+\[ \bigwedge_t^f ite 	(\sum_{n=1}^c crottle_{tn} \geq 1)\  
+						(\sum_{n=1}^e prittle_{tn} = 0)\ 
+						true 
+	\;\; \wedge \]
+\[ \bigwedge_p^{blocks} \bigwedge_{t=1}^f \bigwedge_{n=1}^{num(p)} 
+	p_{tn} = 0 \vee p_{tn} = 1 \]
+
+This formula is easily expressed in YICES syntax, for instance, for
+$e=20$ and $a,b,c,d,f$ as defined in the assignment one can generate
 
 {\footnotesize
 
-{\tt (benchmark test.smt}
+{\tt ;; define all $p_{tn}$ }
 
-{\tt :extrapreds (}
+{\tt (define nuzzle1\_1::int) }
 
-{\tt (p11) (p12) (p13) (p14) (p15) (p16) (p17) (p18) }
-
-{\tt (p21) (p22) (p23) (p24) (p25) (p26) (p27) (p28) }
-
-{\tt (p31) (p32) (p33) (p34) (p35) (p36) (p37) (p38) }
-
-{\tt (p41) (p42) (p43) (p44) (p45) (p46) (p47) (p48) }
-
-{\tt (p51) (p52) (p53) (p54) (p55) (p56) (p57) (p58) }
-
-{\tt (p61) (p62) (p63) (p64) (p65) (p66) (p67) (p68) }
-
-{\tt (p71) (p72) (p73) (p74) (p75) (p76) (p77) (p78) }
-
-{\tt (p81) (p82) (p83) (p84) (p85) (p86) (p87) (p88) }
-
-{\tt )}
-
-{\tt :formula}
-
-{\tt   (and}
-
-{\tt (or (p11) (p12) (p13) (p14) (p15) (p16) (p17) (p18) )}
-
-{\tt (or (p21) (p22) (p23) (p24) (p25) (p26) (p27) (p28) )}
+{\tt (define nuzzle1\_2::int) }
 
 $\cdots \cdots$
 
-{\tt (or (not p11) (not p12)) }
+{\tt (define prittle6\_20::int) }
 
-{\tt (or (not p11) (not p13)) }
+{\tt ;; constraint~\ref{eq:amount} (amount)}
+
+{\tt (assert (= (+ nuzzle1\_1 nuzzle1\_2 $\cdots$ nuzzle6\_4) 4))}
+
+{\tt (assert (= (+ stipple1\_1 stipple1\_2 $\cdots$ stipple6\_8) 8))}
 
 $\cdots \cdots$
 
-{\tt )) }
+{\tt (assert (= (+ prittle1\_1 prittle1\_2 $\cdots$ prittle6\_20) 20))}
+
+{\tt ;; constraint~\ref{eq:weight} (weight)}
+
+{\tt (assert (<= (+ (* nuzzle1\_1 700) (* nuzzle1\_2 700) $\cdots$ 
+		(* prittle1\_20 800)) 7800))}
+
+{\tt (assert (<= (+ (* nuzzle2\_1 700) (* nuzzle2\_2 700) $\cdots$ 
+		(* prittle2\_20 800)) 7800))}
+
+$\cdots \cdots$
+
+{\tt (assert (<= (+ (* prittle6\_1 700) (* prittle6\_2 700) $\cdots$ 
+		(* prittle6\_20 800)) 7800))}
 }
 
-Applying {\tt yices -e -smt test.smt} yields the following result
-within a fraction of a second:
+{\tt ;; constraint~\ref{eq:distinct} (distinct)}
+
+{\tt (assert (= (+ nuzzle1\_1 nuzzle2\_1 $\cdots$ nuzzle6\_1) 1))}
+
+{\tt (assert (= (+ nuzzle1\_2 nuzzle2\_2 $\cdots$ nuzzle6\_2) 1))}
+
+$\cdots \cdots$
+
+{\tt (assert (= (+ prittle1\_1 prittle2\_1 $\cdots$ prittle6\_1) 1))}
+
+{\tt ;; constraint~\ref{eq:valuable} (no 2 duples per truck)}
+
+{\tt (assert (<= (+ dupple1\_1 dupple1\_2 $\cdots$ dupple1\_6 ) 1))}
+
+$\cdots \cdots$
+
+{\tt (assert (<= (+ dupple6\_1 dupple6\_2 $\cdots$ dupple6\_6 ) 1))}
+
+{\tt ;; constraint~\ref{eq:cooled} (cooled)}
+
+{\tt (assert (= (+ stipple1\_1 stipple1\_2 $\cdots$ stipple2\_8) 8))}
+
+{\tt ;; constraint~\ref{eq:explosive} (no Prittles if Crottles and vice-versa)}
+
+{\tt (assert (ite 	($\geq$ (+ crottle1\_1 $\cdots$ crottle1\_10) 1) 
+	 		(= (+ prittle1\_1 $\cdots$ prittle1\_20) 0) $true$))}
+
+$\cdots \cdots$
+
+{\tt (assert (ite 	($\geq$ (+ crottle6\_1 $\cdots$ crottle6\_10) 1) 
+	 		(= (+ prittle6\_1 $\cdots$ prittle6\_20) 0) $true$))}
+
+{\tt ;; constraint~\ref{eq:range} (all $p_{tn}$ should be 0 or 1)}
+
+{\tt (assert( and(<= 0 nuzzle1\_1) (<= nuzzle1\_1 1)))}
+
+{\tt (assert( and(<= 0 nuzzle1\_2) (<= nuzzle1\_2 1)))}
+
+$\cdots \cdots$
+
+{\tt (assert( and(<= 0 prittle6\_20) (<= prittle6\_20 1)))}
+
+To now find what the maximum number of Prittles is we vary the number $e$. 
+Through these experiments it is found that 18 is the largest number of Prittles
+that can be transported within the given constraints.
+Applying {\tt yices assignment1.ys} with $e=18$ yields a result almost 
+instantly:
 
 {\footnotesize
 
 {\tt sat }
 
-{\tt (= p11 false)}
+{\tt (= stipple6\_3 0)}
 
-{\tt (= p12 false)}
+{\tt (= dupple4\_2 0)}
 
-{\tt (= p13 false)}
+{\tt (= stipple3\_4 0)}
 
-{\tt (= p14 true)}
+{\tt (= stipple4\_4 0)}
 
-{\tt (= p15 false)}
+{\tt (= dupple6\_2 0)}
 
-{\tt (= p16 false)}
+{\tt (= stipple1\_6 1)}
 
-{\tt (= p17 false)}
+{\tt (= dupple5\_1 1)}
 
-{\tt (= p18 false)}
-
-{\tt (= p21 false)}
-
-{\tt (= p22 true)}
-
-{\tt (= p23 false)}
+{\tt (= prittle6\_15 0)}
 
 $\cdots \cdots$ }.
 
-The values that are are true are $p_{14}, p_{22}, p_{37}, p_{43},
-p_{56}, p_{68}, p_{75}, p_{81}$. Expressed in a picture this
-yields
+The following table expresses which packet is in which truck
 
 \vspace{3mm}
 
+\includegraphics[angle=0]{one.png}
 
-
-\vspace{3mm}
-
-We check that indeed there are eight queens for which no two are
-on the same row, column or diagonal.
-
-\vspace{3mm}
-
-{\bf Remark:} 
-
-Our formula contains some redundancy: the requirement that every
-row contains exactly one queen implies that there are exactly $n$
-queens in total. By expressing that every column contains at least
-one queen, from this property one concludes that also every column
-contains at most one queen. We chose for this redundancy for
-keeping the symmetry in the solution, and also following the
-general strategy that introducing redundancy is often good for
-efficiency.
-
-\vspace{3mm}
-
-{\bf Generalization:} 
-
-As we generalized our approach for $n$ rather than 8, it is
-interesting to see what happens for other values of $n$. For $n
-> 10$ we have to take care of the notation: if we keep the
-notation then it is not clear whether {\tt p111} represents 
-$p_{1,11}$ or $p_{11,1}$. This is solved by putting an extra 
-symbol between the two numbers. 
-
-For $n=3$ the resulting formula is unsatisfiable, showing that
-there is no solution. For $n = 4,5,6,\ldots$ the formula is
-satisfiable, by which is a solution of the problem is found.
-Efficiency is not a problem: for $n = 60$ there are 3600
-variables and the formula consists of over 350,000 clauses, but 
-still {\tt yices} succeeds in finding a solution within a few
-seconds.
 \end{document}
