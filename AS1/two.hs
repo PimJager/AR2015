@@ -70,12 +70,16 @@ overlap cs = do
     tellLn ""
     where
         components (c1,c2) = do
-            tellLn  $ "\t (not (and "
-            tellLn  $ "\t\t (<= " <<< x c2 <<< " " <<< x c1 <<< ")"
-            tellLn  $ "\t\t (< " <<< x c1 <<< " (+ " <<< x c2 <<< " " <<< w c2 <<< "))"
-            tellLn  $ "\t\t (<= " <<< y c2 <<< " " <<< y c1 <<< ")"
-            tellLn  $ "\t\t (< " <<< y c1 <<< " (+ " <<< y c2 <<< " " <<< h c2 <<< "))"
-            tellLn  $ "\t))"
+            tellLn  $ "\t (or "
+            tellLn  $ "\t\t (<= " <<< left c1 <<< " " <<< right c2 <<< ")"
+            tellLn  $ "\t\t (>= " <<< right c1 <<< " " <<< left c2 <<< ")"
+            tellLn  $ "\t\t (<= " <<< bottom c1 <<< " " <<< top c2 <<< ")"
+            tellLn  $ "\t\t (>= " <<< top c2 <<< " " <<< bottom c2 <<< ")"
+            tellLn  $ "\t )"
+        bottom  = y
+        top c   = "(+ " <<< y c <<< " " <<< h c <<< ")"
+        left    = x
+        right c = "(+ " <<< x c <<< " " <<< w c <<< ")"
 
 heat :: [Component] -> YicesWriter
 heat cs = do
@@ -98,23 +102,34 @@ power pcs rcs = do
             tellLn "\t )"
         power' rc pc = do
             tellLn  $ "\t\t(or\t(and "
-            tellLn  $ "\t\t\t (<=  " <<< x pc <<< " " <<< x rc <<< ") (<= " <<< x rc <<< " (+ " <<< x pc <<< " " <<< w pc <<< "))"
+            tellLn  $ "\t\t\t (<=  " <<< x pc <<< " " <<< x rc <<< ") (< " <<< x rc <<< " (+ " <<< x pc <<< " " <<< w pc <<< "))"
             tellLn  $ "\t\t\t (or (= " <<< y rc <<< "(+ " <<< y pc <<< " " <<< h pc <<< ")) (= " <<< y pc <<< "(+ " <<< y rc <<< " " <<< h rc <<< ")))"
             tellLn  $ "\t\t\t)"
             tellLn  $ "\t\t\t(and "
-            tellLn  $ "\t\t\t (<=  " <<< y pc <<< " " <<< y rc <<< ") (<= " <<< y rc <<< " (+ " <<< y pc <<< " " <<< y pc <<< "))"
+            tellLn  $ "\t\t\t (<=  " <<< y pc <<< " " <<< y rc <<< ") (< " <<< y rc <<< " (+ " <<< y pc <<< " " <<< y pc <<< "))"
             tellLn  $ "\t\t\t (or (= " <<< x rc <<< "(+ " <<< x pc <<< " " <<< w pc <<< ")) (= " <<< x pc <<< "(+ " <<< x rc <<< " " <<< w rc <<< ")))"
             tellLn "\t\t))"
 
+results :: [Component] -> YicesWriter
+results cs = do
+    tellLn ";; SHow output"
+    tellLn "(check)"
+    tellLn "(echo \"x/y values:\")"
+    mapM_ components cs
+    tellLn ""
+    where
+        components c = do
+            tellLn  $ "(echo \"" <<< x c <<< ":\" ) (eval " <<< x c <<< ")"
+            tellLn  $ "(echo \"" <<< y c <<< ":\" ) (eval " <<< y c <<< ")"
+            tellLn  $ "(echo \"" <<< w c <<< ":\" ) (eval " <<< w c <<< ")"
+            tellLn  $ "(echo \"" <<< h c <<< ":\" ) (eval " <<< h c <<< ")"
 
-main = putStr $ T.unpack $ execWriter $ (variables (powerC++regularC) >> env)
+main = putStr $ T.unpack $ execWriter $ (variables (powerC++regularC) >> env >> results (powerC++regularC))
     where
         env = do
             tellLn "(assert (or"
-            mapM_ writers permuations
+            mapM_ writers permutations
             tellLn "))"
-            tellLn "(check)"
-            tellLn "(show-model)"
         writers (pc, rc) = do -- all writers expect to be executed within the aseert - or block
             tellLn "  (and"
             dimensions (pc++rc)
@@ -123,4 +138,7 @@ main = putStr $ T.unpack $ execWriter $ (variables (powerC++regularC) >> env)
             heat pc
             power pc rc
             tellLn "  )"
-        permuations = [(powerC, regularC)] -- todo: make permutations
+        permutations                = [(pcs, rcs) |  pcs <- (permutations'' $ permutations' powerC), rcs <- (permutations'' $ permutations' regularC)]
+        permutations'               = map (\(c) -> (C (ci c) (cw c) (ch c), C (ci c) (ch c) (cw c)))
+        permutations'' []           = [[]]
+        permutations'' ((c,c'):cs)  = (map (c:) (permutations'' cs)) ++ (map (c':) (permutations'' cs))
