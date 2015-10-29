@@ -147,8 +147,8 @@ main = putStr $ T.unpack $ execWriter $ (variables (powerC++regularC) >> env >> 
             heat pc
             power pc rc
             tellLn "  )"
-        permutations_                = [(powerC, regularC)]
-        permutations                = [(pcs, rcs) |  pcs <- (permutations'' $ permutations' powerC), rcs <- (permutations'' $ permutations' regularC)]
+        permutations                = [(powerC, regularC)]
+        permutations_                = [(pcs, rcs) |  pcs <- (permutations'' $ permutations' powerC), rcs <- (permutations'' $ permutations' regularC)]
         permutations'               = map (\(c) -> (C (ci c) (cw c) (ch c), C (ci c) (ch c) (cw c)))
         permutations'' []           = [[]]
         permutations'' ((c,c'):cs)  = (map (c:) (permutations'' cs)) ++ (map (c':) (permutations'' cs))

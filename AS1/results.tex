@@ -127,86 +127,7 @@ truck $t$ contains pallet $p$ numbered $n$ (1) or not (0).
 
 The total formula consists of the conjunction of all these formulas.
 
-This formula is easily expressed in YICES syntax, for instance, for
-$e=20$ and $a,b,c,d,f$ as defined in the assignment one can generate
-
-{\footnotesize
-
-{\tt ;; define all $p_{tn}$ }
-
-{\tt (define nuzzle1\_1::int) }
-
-{\tt (define nuzzle1\_2::int) }
-
-$\cdots \cdots$
-
-{\tt (define prittle6\_20::int) }
-
-{\tt ;; constraint~\ref{eq:amount} (amount)}
-
-{\tt (assert (= (+ nuzzle1\_1 nuzzle1\_2 $\cdots$ nuzzle6\_4) 4))}
-
-{\tt (assert (= (+ stipple1\_1 stipple1\_2 $\cdots$ stipple6\_8) 8))}
-
-$\cdots \cdots$
-
-{\tt (assert (= (+ prittle1\_1 prittle1\_2 $\cdots$ prittle6\_20) 20))}
-
-{\tt ;; constraint~\ref{eq:weight} (weight)}
-
-{\tt (assert (<= (+ (* nuzzle1\_1 700) (* nuzzle1\_2 700) $\cdots$ 
-		(* prittle1\_20 800)) 7800))}
-
-{\tt (assert (<= (+ (* nuzzle2\_1 700) (* nuzzle2\_2 700) $\cdots$ 
-		(* prittle2\_20 800)) 7800))}
-
-$\cdots \cdots$
-
-{\tt (assert (<= (+ (* prittle6\_1 700) (* prittle6\_2 700) $\cdots$ 
-		(* prittle6\_20 800)) 7800))}
-}
-
-{\tt ;; constraint~\ref{eq:distinct} (distinct)}
-
-{\tt (assert (= (+ nuzzle1\_1 nuzzle2\_1 $\cdots$ nuzzle6\_1) 1))}
-
-{\tt (assert (= (+ nuzzle1\_2 nuzzle2\_2 $\cdots$ nuzzle6\_2) 1))}
-
-$\cdots \cdots$
-
-{\tt (assert (= (+ prittle1\_1 prittle2\_1 $\cdots$ prittle6\_1) 1))}
-
-{\tt ;; constraint~\ref{eq:valuable} (no 2 duples per truck)}
-
-{\tt (assert (<= (+ dupple1\_1 dupple1\_2 $\cdots$ dupple1\_6 ) 1))}
-
-$\cdots \cdots$
-
-{\tt (assert (<= (+ dupple6\_1 dupple6\_2 $\cdots$ dupple6\_6 ) 1))}
-
-{\tt ;; constraint~\ref{eq:cooled} (cooled)}
-
-{\tt (assert (= (+ stipple1\_1 stipple1\_2 $\cdots$ stipple2\_8) 8))}
-
-{\tt ;; constraint~\ref{eq:explosive} (no Prittles if Crottles and vice-versa)}
-
-{\tt (assert (ite 	($\geq$ (+ crottle1\_1 $\cdots$ crottle1\_10) 1) 
-	 		(= (+ prittle1\_1 $\cdots$ prittle1\_20) 0) $true$))}
-
-$\cdots \cdots$
-
-{\tt (assert (ite 	($\geq$ (+ crottle6\_1 $\cdots$ crottle6\_10) 1) 
-	 		(= (+ prittle6\_1 $\cdots$ prittle6\_20) 0) $true$))}
-
-{\tt ;; constraint~\ref{eq:range} (all $p_{tn}$ should be 0 or 1)}
-
-{\tt (assert( and(<= 0 nuzzle1\_1) (<= nuzzle1\_1 1)))}
-
-{\tt (assert( and(<= 0 nuzzle1\_2) (<= nuzzle1\_2 1)))}
-
-$\cdots \cdots$
-
-{\tt (assert( and(<= 0 prittle6\_20) (<= prittle6\_20 1)))}
+This formula is easily expressed in YICES syntax.
 
 To now find what the maximum number of Prittles is we vary the number $e$. 
 Through these experiments it is found that 18 is the largest number of Prittles
@@ -328,6 +249,8 @@ and all existential quantifiers by disjunctions:
 \begin{equation}
 	\exists c \in C \rightarrow \bigvee_c^C
 \end{equation}
+it can even be expressed without any quantification, this makes YICES more
+reliable in providing a correct result.
 
 This yields: ARGH UNSAT, HOEZO IS DIT UNSAT $:/$
 
