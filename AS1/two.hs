@@ -47,8 +47,14 @@ dimensions cs = do
     tellLn ""
     where
         components c = do 
+            tellLn  $ "(or (and"
             tellLn  $ "\t (= " <<< w c <<< " " <<< (showT . cw) c <<< ")"
             tellLn  $ "\t (= " <<< h c <<< " " <<< (showT . ch) c <<< ")"
+            tellLn  $ "))"
+            --tellLn  $ ") (and "
+            --tellLn  $ "\t (= " <<< w c <<< " " <<< (showT . ch) c <<< ")"
+            --tellLn  $ "\t (= " <<< h c <<< " " <<< (showT . cw) c <<< ")"
+            --tellLn  $ "))"
 
 
 inside :: [Component] -> YicesWriter
@@ -66,15 +72,16 @@ inside cs = do
 overlap :: [Component] -> YicesWriter
 overlap cs = do
     tellLn "\t;; components should not overlap"
-    mapM_ components [(c1,c2) | c1 <- cs, c2<-(delete c1 cs)]
+    mapM_ components
+     [(c1,c2) | c1 <- cs, c2<-(delete c1 cs)]
     tellLn ""
     where
         components (c1,c2) = do
             tellLn  $ "\t (or "
-            tellLn  $ "\t\t (<= " <<< left c1 <<< " " <<< right c2 <<< ")"
-            tellLn  $ "\t\t (>= " <<< right c1 <<< " " <<< left c2 <<< ")"
-            tellLn  $ "\t\t (<= " <<< bottom c1 <<< " " <<< top c2 <<< ")"
-            tellLn  $ "\t\t (>= " <<< top c2 <<< " " <<< bottom c2 <<< ")"
+            tellLn  $ "\t\t (>= " <<< left c1 <<< " " <<< right c2 <<< ")"
+            tellLn  $ "\t\t (<= " <<< right c1 <<< " " <<< left c2 <<< ")"
+            tellLn  $ "\t\t (>= " <<< bottom c1 <<< " " <<< top c2 <<< ")"
+            tellLn  $ "\t\t (<= " <<< top c1 <<< " " <<< bottom c2 <<< ")"
             tellLn  $ "\t )"
         bottom  = y
         top c   = "(+ " <<< y c <<< " " <<< h c <<< ")"
@@ -87,8 +94,10 @@ heat cs = do
     mapM_ components [(c1,c2) | c1 <- cs, c2<-(delete c1 cs)]
     tellLn ""
     where
-        components (c1,c2) = 
-            tellLn  $ "\t (or (>= (abs (- " <<< x c1 <<< " " <<< x c2 <<< ")) 17) (>= (abs (- " <<< y c1 <<< " " <<< y c2 <<< ")) 17))"
+        components (c1,c2) = do
+            tellLn  $ "\t (or (>= (abs (- (+ " <<< x c1 <<< " " <<< (half w c1) <<< ")" <<< "(+ " <<< x c2 <<< " " <<< (half w c2) <<< ")" <<< ")) 17)"
+            tellLn  $ "\t\t (>= (abs (- (+ " <<< y c1 <<< " " <<< (half h c1) <<< ")" <<< "(+ " <<< y c2 <<< " " <<< (half h c2) <<< ")" <<< ")) 17))"
+        half f c = "(/ " <<< f c <<< " 2)"
 
 power :: [Component] -> [Component] -> YicesWriter
 power pcs rcs = do
@@ -106,7 +115,7 @@ power pcs rcs = do
             tellLn  $ "\t\t\t (or (= " <<< y rc <<< "(+ " <<< y pc <<< " " <<< h pc <<< ")) (= " <<< y pc <<< "(+ " <<< y rc <<< " " <<< h rc <<< ")))"
             tellLn  $ "\t\t\t)"
             tellLn  $ "\t\t\t(and "
-            tellLn  $ "\t\t\t (<=  " <<< y pc <<< " " <<< y rc <<< ") (< " <<< y rc <<< " (+ " <<< y pc <<< " " <<< y pc <<< "))"
+            tellLn  $ "\t\t\t (<=  " <<< y pc <<< " " <<< y rc <<< ") (< " <<< y rc <<< " (+ " <<< y pc <<< " " <<< h pc <<< "))"
             tellLn  $ "\t\t\t (or (= " <<< x rc <<< "(+ " <<< x pc <<< " " <<< w pc <<< ")) (= " <<< x pc <<< "(+ " <<< x rc <<< " " <<< w rc <<< ")))"
             tellLn "\t\t))"
 
@@ -138,6 +147,7 @@ main = putStr $ T.unpack $ execWriter $ (variables (powerC++regularC) >> env >> 
             heat pc
             power pc rc
             tellLn "  )"
+        permutations_                = [(powerC, regularC)]
         permutations                = [(pcs, rcs) |  pcs <- (permutations'' $ permutations' powerC), rcs <- (permutations'' $ permutations' regularC)]
         permutations'               = map (\(c) -> (C (ci c) (cw c) (ch c), C (ci c) (ch c) (cw c)))
         permutations'' []           = [[]]

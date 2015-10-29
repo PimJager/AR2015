@@ -131,7 +131,13 @@ explosive = do
             >>  tellLn ") 0) true))"
 
 showModel :: YicesWriter
-showModel = tellLn "(check)" >> tellLn "(show-model)" 
+showModel = do
+    tellLn "(check)"
+    tellLn "(show-model)" 
+    mapM_ pallets allPallets
+        where
+            res n       = "(echo \"" `T.append` n `T.append`":\" ) (eval " `T.append` n `T.append` ")"
+            pallets p   = mapM_ (\n -> mapM_ (\t -> tellLn $ res $ pallet p t n) [1..num_trucks]) [1..p_count p] 
 
 
 main = putStr $ T.unpack $ execWriter   (   defineVars 

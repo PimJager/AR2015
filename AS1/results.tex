@@ -255,4 +255,29 @@ The following table expresses which packet is in which truck
 
 \includegraphics[angle=0]{one.png}
 
+\subsection{Problem 2: Chip design}
+
+Give a chip design containing eight regular and three power components 
+satisfying the following constraints:
+\begin{itemize}
+	\item The width of the chip is 29 and the height is 22.
+	\item All power components have width 4 and height 2.
+	\item The sizes of the eight regular components are $9*7$,
+		$12*6,$ $10*7,$ $18*5,$ $20*4,$
+		$10*6,$ $8*6$ and $10*8$ respectively.
+	\item All components may be turned 90, but may not overlap.
+	\item In order to get power, all regular components should directly be
+		connected to a power component, that is, an edge of the
+		component should have at least one point in common with an edge
+		of the power component.
+	\item Due to limits on heat production the power components should be
+		not too close: their centres should differ at least $17$ in
+		either the $x$ direction or the $y$ direction (or both).
+\end{itemize}
+
+We define the set $PC$ of all power components, the set $RC$ of all regular
+components and the set $C = PC \cup RC$. Furthermore for every $c \in C$ we
+define $x_c, y_c$ for the x and y coordinate of its bottom left corner and
+$h_c, w_c$ for its width and height. 
+
 \end{document}
