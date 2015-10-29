@@ -65,9 +65,9 @@ inside cs = do
     where
         components c = do
             tell    $ "\t (<= 0 " <<< x c <<< ") "
-            tellLn  $ "(<= " <<< x c <<< " (- " <<< showT dimW <<< " " <<< w c <<< "))"
+            tellLn  $ "(< " <<< x c <<< " (- " <<< showT dimW <<< " " <<< w c <<< "))"
             tell    $ "\t (<= 0 " <<< y c <<< ") "
-            tellLn  $ "(<= " <<< y c <<< " (- " <<< showT dimH <<< " " <<< h c <<< "))"
+            tellLn  $ "(< " <<< y c <<< " (- " <<< showT dimH <<< " " <<< h c <<< "))"
 
 overlap :: [Component] -> YicesWriter
 overlap cs = do

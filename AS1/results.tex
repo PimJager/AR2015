@@ -197,8 +197,8 @@ The following formulas express the above constraints:
 
 All components should fit within the board, therefore:
 \begin{equation} 
-	\forall c \in C : (0 \leq x_c \leq (29-w_c)) \wedge 
-		(0 \leq y_c \leq (22-h_c))
+	\forall c \in C : (0 \leq x_c \le (29-w_c)) \wedge 
+		(0 \leq y_c \le (22-h_c))
 \end{equation}
 
 \vspace{3mm}
@@ -208,9 +208,9 @@ left, right, above or below every other component.
 \begin{equation}
 	\forall c \in C : \forall c' \in C \setminus \{c\} :
 		(x_{c'} \geq x_c + w_c) \vee
-		(x_{c'} + w_{c'} \leq x_c) \vee
+		(x_{c'} + w_{c'} \le x_c) \vee
 		(y_{c'} \geq y_c + h_c) \vee
-		(y_{c'} + h_{c'} \leq y_c)
+		(y_{c'} + h_{c'} \le y_c)
 \end{equation}
 
 \vspace{3mm}
