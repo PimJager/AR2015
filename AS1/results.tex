@@ -64,8 +64,8 @@ building blocks.
 
 \vspace{3mm}
 
-In the following formulas we will use $blocks$ as a shorthand for ${nuzzle, 
-skipple, crottle, dupple, prittle}$ and use $p_{tn}$ with $p \in blocks$
+In the following formulas we will use $blocks$ as a shorthand for $\{nuzzle, 
+skipple, crottle, dupple, prittle\}$ and use $p_{tn}$ with $p \in blocks$
 as a shorthand notation for eg. $nuzzle_{tn}$. The function $num(p)$ is assumed 
 to give the number of desired pallets to move of a certain block $p$, eg.
 $num(dupple) = d$. Similar, the function $weight(p)$ gives the weight of a 
@@ -76,32 +76,35 @@ certain pallet $p$.
 For each building block the correct \emph{amount} of blocks need to be
 transported. This is expressed in formula
 \begin{equation} \label{eq:amount}
-  \bigwedge_p^{blocks} (\sum_{t=1}^{f} \sum_{n=1}^{num(p)} p_{tn} = num(p))
+  \bigwedge_{p \in blocks} 
+  	(\sum_{t=1}^{1..f} \sum_{n=1}^{1..num(p)} p_{tn} = num(p))
 \end{equation}
 
 The combined \emph{weight} of all pallets in an truck can not exceed 7800kg. 
 This is expressed in the formula
 \begin{equation} \label{eq:weight}
- \bigwedge_t^f (\sum_p^{blocks} \sum_n^{num(p)} weight(p_{tn}) \leq 7800)
+ \bigwedge_{t=1}^{1..f} 
+ 	(\sum_{p \in blocks}  \sum_{n=1}^{1..num(p)} weight(p_{tn}) \leq 7800)
 \end{equation}
 
 Because all pallets have $f$ different positions they could be in (one for each
 truck), it is necessary to express that each \emph{distinct} pallet (numbered 
 $n$) is in exactly one truck.
 \begin{equation} \label{eq:distinct}
-  \bigwedge_p^{blocks} \bigwedge_n^{num(p)} (\sum_{t=1}^f p_{tn} = 1)
+  \bigwedge_{p \in blocks}  
+  	\bigwedge_{n=1}^{1..num(p)} (\sum_{t=1}^{1..f} p_{tn} = 1)
 \end{equation}
 
 The problem states that \emph{no 2 duples} can be in any truck. 
 That is, for each truck the number of duples should be $\leq 1$. 
 \begin{equation} \label{eq:valuable}
-  \bigwedge_{t=1}^f (\sum_{n=1}^d dupple_{tn} \leq 1)
+  \bigwedge_{t=1}^{1..f} (\sum_{n=1}^{1..d} dupple_{tn} \leq 1)
 \end{equation}
 
 All Skipples should be in one of two \emph{cooled} trucks. We give these trucks
 numbers 1 and 2. 
 \begin{equation} \label{eq:cooled}
-  \sum_{t=1}^2 \sum_{n=1}^b p_{tn} = b
+  \sum_{t=1}^{1..2} \sum_{n=1}^{1..b} p_{tn} = b
 \end{equation}
 
 All trucks should \emph{not contain Prittles if they contain Crottles}. That is,
@@ -112,16 +115,16 @@ When expressing this formula we use the function \emph{ite} (if-then-else) which
 evaluates to its second argument when the first one evaluates to $true$ and 
 evaluates to its third argument otherwise.
 \begin{equation} \label{eq:explosive}
-  \bigwedge_t^f ite 	(\sum_{n=1}^c crottle_{tn} \geq 1)\  
-						(\sum_{n=1}^e prittle_{tn} = 0)\ 
-						true 
+  \bigwedge_{t=1}^{1..f} ite 	(\sum_{n=1}^{1..c} crottle_{tn} \geq 1)\  
+								(\sum_{n=1}^{1..e} prittle_{tn} = 0)\ 
+								true 
 \end{equation}
 
 One additional needed constraint has to with the choice to represent $p_{tn}$
 as a number. This constraint states that all $p_{tn}$ are either 1 or 0, that is
 truck $t$ contains pallet $p$ numbered $n$ (1) or not (0).
 \begin{equation} \label{eq:range}
-  \bigwedge_p^{blocks} \bigwedge_{t=1}^f \bigwedge_{n=1}^{num(p)} 
+  \bigwedge_{p \in blocks}  \bigwedge_{t=1}^{1..f} \bigwedge_{n=1}^{1..num(p)} 
 	p_{tn} = 0 \vee p_{tn} = 1
 \end{equation}
 
@@ -243,11 +246,11 @@ The complete formula consists of the conjunction of these formulas. This
 formula is easily expressed in YICES syntax. If we replace all universal
 quantifiers by conjunctions:
 \begin{equation}
-	\forall c \in C \rightarrow \bigwedge_c^C
+	\forall c \in C \rightarrow \bigwedge_{c \in C}
 \end{equation}
 and all existential quantifiers by disjunctions:
 \begin{equation}
-	\exists c \in C \rightarrow \bigvee_c^C
+	\exists c \in C \rightarrow \bigvee_{c \in C}
 \end{equation}
 it can even be expressed without any quantification, this makes YICES more
 reliable in providing a correct result.
@@ -269,7 +272,7 @@ requirements:
 	\item Job 9 may only start if jobs 5 and 8 have been finished
 	\item Job 11 may only start if job 10 has been finished.
 	\item Job 12 may only start if jobs 9 and 11 have been finished.
-	\item Jobs 5,7 en 10 require a special equipment of which only one copy
+	\item Jobs 5, 7 en 10 require a special equipment of which only one copy
 		is available, so no two of these jobs may run at the same time.
 \end{itemize}
 
@@ -277,13 +280,62 @@ Find a solution of this scheduling problem for which the total running time is
 minimal.
 
 \subsubsection*{Solution}
+We introduce 12 variables $j_i$ with $1 \leq i \leq 12$, one for each job,
+representing the time at which the job is finished. The jobs which need to have
+an exclusive lock on the special equipment are grouped in the set 
+$J = \{5,7,10\}$. We also define the function $d(i)$ which gives the set of jobs on which the job $i$ depends. I.e. $d(3) = \{1,2\}$.
 
+We also introduce the variable $n$, which is the total running time of the 
+system. To find a solution we minimize $n$.
 
+\vspace{3mm}
+
+All jobs should be executed within the available time. That is, their end time
+$j_i$ should be between the first time the job could finish ($i$ time units
+after the the start of the system) and $n$.
+\begin{equation}
+	\bigwedge_{i=i}^{1..12} i \leq j_i \leq n
+\end{equation}
+
+\vspace{3mm}
+
+All jobs should only be executed when the jobs on which they depend have
+finished.
+\begin{equation}
+	\bigwedge_{i=1}^{1..12} \bigwedge_{k \in d(i)} j_i - i \geq j_k
+\end{equation}
+
+\vspace{3mm}
+
+The jobs in set $J$ can not be executed at the same time.
+\begin{equation}
+	\bigwedge_{i \in J} \bigwedge_{k \in J\setminus\{i\}} 
+		j_i - i \geq j_k \vee j_k -k \geq j_i
+\end{equation}
+
+\vspace{3mm}
+
+The complete formula consists of the conjunction of above formulas and can 
+easily be expressed in YICES syntax. We use YICES for various values of $n$
+to find the smallest $n$ for which the formula yields SAT. We find that
+$n = 36$ is the smallest $n$ for which the jobs can be scheduled. 
+
+The table below shows the scheduling of the jobs for $n = 36$. Each row 
+represents a job $i$ and each column a period in time.  
+
+\includegraphics[width=\textwidth]{three.png}
 
 
 \subsection*{Problem 4: Seven integers}
 
-For problem description please see the assignment.
+Seven integer variables $a_1; a_2; a_3; a_4; a_5; a_6; a_7$ are given, for
+which the initial value of $a_i$ is $i$ for $i=1,\ldots,I$ where $I=7$. The
+following steps are defined: choose $i$ with $1<i<7$ and execute
+$$a_i:=a_{i-1}+a_{i+1}$$
+that is, $a_i$ gets the sum of the values of its
+neighbors and all other values remain unchanged. Show how it is possible that
+after a number of steps a number of steps a number $\geq 50$ occurs at least
+twice in $a_1; a_2; a_3; a_4; a_5; a_6; a_7$.
 
 \subsubsection*{Solution}
 We introduce variables $a_{ij}$ with $1\leq i \leq 7$ and $1 \leq j \leq n$ 
@@ -306,7 +358,7 @@ All variables $a_i$ should have the correct values in the first step $j=1$.
 
 \vspace{3mm}
 
-At any step $1 \le \leq n$ one variable can be updated, all others should stay
+At any step $1 \le j \leq n$ one variable can be updated, all others should stay
 the same:
 \begin{equation}
 	\bigwedge_{j=2}^{2..n} \bigvee_{i=1}^{1..7} 
@@ -320,13 +372,14 @@ In the last step $j=n$ at least two $a_{in}$ should have a value over $50$.
 		a_{in} \geq 50 \wedge a_{kn} \geq 50 \Big)
 \end{equation}
 
-The complete formula exists of the conjunction of the above subformulas and can 
-be easily expressed in YICES syntax. When using YICES to check the formula
+The complete formula consists of the conjunction of the above subformulas and
+can easily
+be expressed in YICES syntax. When using YICES to check the formula
 we find that $n=8$ is the minimum value for which the formula is satisfiable.
 That means that at least 7 steps are needed after the initial step to get two
 numbers which are $\geq 50$.
 
-The table below illustrates this satisfying assignment. With value the value in
+The table below illustrates this. With the value in
 column $i$ and row $j$ corresponding to the value of $a_{ij}$. For clarity in
 each timestep the value which is updated has been made bold.
 
