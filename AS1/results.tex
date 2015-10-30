@@ -163,7 +163,7 @@ The following table expresses which packet is in which truck
 
 \includegraphics[angle=0]{one.png}
 
-\subsection{Problem 2: Chip design}
+\subsection*{Problem 2: Chip design}
 
 Give a chip design containing eight regular and three power components 
 satisfying the following constraints:
@@ -183,7 +183,7 @@ satisfying the following constraints:
 		either the $x$ direction or the $y$ direction (or both).
 \end{itemize}
 
-\subsubsection{Solution}
+\subsubsection*{Solution}
 We define the set $PC$ of all power components, the set $RC$ of all regular
 components and the set $C = PC \cup RC$. Furthermore for every $c \in C$ we
 define $x_c, y_c$ for the x and y coordinate of its bottom left corner and
@@ -255,11 +255,37 @@ reliable in providing a correct result.
 This yields: ARGH UNSAT, HOEZO IS DIT UNSAT $:/$
 
 
-\subsection{Problem 4 : Seven integers}
+
+
+\subsection*{Problem 3: Job scheduling}
+Twelve jobs numbered from 1 to 12 have to be executed satisfying the following
+requirements:
+\begin{itemize}
+	\item The running time of job $i$ is $i$, for $i=1,\ldots,12$
+	\item All jobs run without interrupt.
+	\item Job 3 may only start if jobs 1 and 2 have been finished.
+	\item Job 5 may only start if jobs 3 and 4 have been finished.
+	\item Job 7 may only start if jobs 3, 4 and 6 have been finished.
+	\item Job 9 may only start if jobs 5 and 8 have been finished
+	\item Job 11 may only start if job 10 has been finished.
+	\item Job 12 may only start if jobs 9 and 11 have been finished.
+	\item Jobs 5,7 en 10 require a special equipment of which only one copy
+		is available, so no two of these jobs may run at the same time.
+\end{itemize}
+
+Find a solution of this scheduling problem for which the total running time is
+minimal.
+
+\subsubsection*{Solution}
+
+
+
+
+\subsection*{Problem 4: Seven integers}
 
 For problem description please see the assignment.
 
-\subsubsection{Solution}
+\subsubsection*{Solution}
 We introduce variables $a_{ij}$ with $1\leq i \leq 7$ and $1 \leq j \leq n$ 
 where $n$ is the total number of steps needed to reach the result.
 
