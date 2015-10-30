@@ -254,4 +254,58 @@ reliable in providing a correct result.
 
 This yields: ARGH UNSAT, HOEZO IS DIT UNSAT $:/$
 
+
+\subsection{Problem 4 : Seven integers}
+
+For problem description please see the assignment.
+
+\subsubsection{Solution}
+We introduce variables $a_{ij}$ with $1\leq i \leq 7$ and $1 \leq j \leq n$ 
+where $n$ is the total number of steps needed to reach the result.
+
+Each
+variable $a_{ij}$ represents the value of $a_i$ at step $j$. Each step at
+most one variable $a_i$ has its value is updated, that is: 
+$a_{ij} = a_{(i-1)(j-1)}+ a_{(i+1)(j-1)}$. All other variables hold their value:
+$a_{ij} = a_{i(j-1)}$.
+
+The following formulas describe the solution to the problem:
+
+\vspace{3mm}
+
+All variables $a_i$ should have the correct values in the first step $j=1$.
+\begin{equation}
+	\bigwedge_{i=1}^{1..7} a_{i1} = i
+\end{equation}
+
+\vspace{3mm}
+
+At any step $1 \le \leq n$ one variable can be updated, all others should stay
+the same:
+\begin{equation}
+	\bigwedge_{j=2}^{2..n} \bigvee_{i=1}^{1..7} 
+		\Big(a_{ij} = a_{(i-1)(j-1)} + a_{(i+1)(j-1)} \wedge
+		\bigwedge_i^{\{1..7\}\setminus \{i\}} a_{ij} = a_{i(j-1)} \Big)
+\end{equation}
+
+In the last step $j=n$ at least two $a_{in}$ should have a value over $50$. 
+\begin{equation}
+	\bigvee_{i=1}^{1..6} \Big( \bigvee_{k=i+1}^{i+1..7} 
+		a_{in} \geq 50 \wedge a_{kn} \geq 50 \Big)
+\end{equation}
+
+The complete formula exists of the conjunction of the above subformulas and can 
+be easily expressed in YICES syntax. When using YICES to check the formula
+we find that $n=8$ is the minimum value for which the formula is satisfiable.
+That means that at least 7 steps are needed after the initial step to get two
+numbers which are $\geq 50$.
+
+The table below illustrates this satisfying assignment. With value the value in
+column $i$ and row $j$ corresponding to the value of $a_{ij}$. For clarity in
+each timestep the value which is updated has been made bold.
+
+\vspace{3mm}
+
+\includegraphics[width=\textwidth]{four.png}
+
 \end{document}
