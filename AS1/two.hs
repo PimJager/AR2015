@@ -23,8 +23,8 @@ data Component = C { ci:: Int, cw :: Int, ch :: Int }
 
 powerC      = map (\i-> C i 2 4) [1..3]
 regularC    = zipWith (\i (w,h) -> C i w h) [4..] [(9,7), (12,6), (10,7), (18,5), (20,4), (10,6), (8,6), (10,8)] 
-dimW        = 29
-dimH        = 22
+dimW        = 31
+dimH        = 24
 
 x c = "x_" <<< (showT $ ci c)
 y c = "y_" <<< (showT $ ci c)
@@ -50,11 +50,12 @@ dimensions cs = do
             tellLn  $ "(or (and"
             tellLn  $ "\t (= " <<< w c <<< " " <<< (showT . cw) c <<< ")"
             tellLn  $ "\t (= " <<< h c <<< " " <<< (showT . ch) c <<< ")"
-            tellLn  $ "))"
-            --tellLn  $ ") (and "
-            --tellLn  $ "\t (= " <<< w c <<< " " <<< (showT . ch) c <<< ")"
-            --tellLn  $ "\t (= " <<< h c <<< " " <<< (showT . cw) c <<< ")"
-            --tellLn  $ "))"
+            tellLn  $ "\t)"
+            tellLn  $ "\t(and"
+            tellLn  $ "\t (= " <<< w c <<< " " <<< (showT . ch) c <<< ")"
+            tellLn  $ "\t (= " <<< h c <<< " " <<< (showT . cw) c <<< ")"
+            tellLn  $ "\t)"
+            tellLn  $ ")"
 
 
 inside :: [Component] -> YicesWriter
@@ -136,19 +137,14 @@ results cs = do
 main = putStr $ T.unpack $ execWriter $ (variables (powerC++regularC) >> env >> results (powerC++regularC))
     where
         env = do
-            tellLn "(assert (or"
-            mapM_ writers permutations
-            tellLn "))"
-        writers (pc, rc) = do -- all writers expect to be executed within the aseert - or block
-            tellLn "  (and"
+            tellLn "(assert"
+            writers (powerC, regularC)
+            tellLn ")"
+        writers (pc, rc) = do -- all writers expect to be executed within the assert - or block
+            tellLn "(and"
             dimensions (pc++rc)
             inside (pc++rc)
             overlap (pc++rc)
             heat pc
             power pc rc
-            tellLn "  )"
-        permutations                = [(powerC, regularC)]
-        permutations_                = [(pcs, rcs) |  pcs <- (permutations'' $ permutations' powerC), rcs <- (permutations'' $ permutations' regularC)]
-        permutations'               = map (\(c) -> (C (ci c) (cw c) (ch c), C (ci c) (ch c) (cw c)))
-        permutations'' []           = [[]]
-        permutations'' ((c,c'):cs)  = (map (c:) (permutations'' cs)) ++ (map (c':) (permutations'' cs))
+            tellLn ")"

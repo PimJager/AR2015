@@ -1,0 +1,98 @@
+\documentclass[12pt]{article}
+\usepackage{a4wide}
+\usepackage{latexsym}
+\usepackage{amssymb}
+\usepackage{epic}
+\usepackage{graphicx}
+\usepackage{amsmath}
+\usepackage{enumerate}
+%\pagestyle{empty}
+\newcommand{\tr}{\mbox{\sf true}}
+\newcommand{\fa}{\mbox{\sf false}}
+\newcommand{\bimp}{\leftrightarrow}
+
+
+\begin{document}
+
+\section*{Automated Reasoning - Assignment series 2 }
+
+\begin{center}
+P.T. Jager, BSc. \\
+Radboud universiteit Nijmegen\\
+email: {\tt p.jager@student.ru.nl}
+\end{center}
+
+\subsection*{Problem 2: Bottles}
+
+Three bottles can hold 144, 72 and 16 units (say, centiliters), respectively.
+Initially the first one contains 3 units of water, the others are empty. 
+The following actions may be performed any number of times:
+
+\begin{itemize}
+	\item One of the bottles is fully filled, at some water tap.
+	\item One of the bottles is emptied.
+	\item The content of one bottle is poured into another one. If it fits, 
+			then the full content is poured, otherwise the pouring stops when 
+			the other bottle is full.
+\end{itemize}
+
+\begin{enumerate}[(a)]
+	\item Determine whether it is possible to arrive at a situation in which 
+	the first bottle contains 8 units and the second one contains 11 units. If 
+	so, give a scenario reaching this situation.
+	\item Do the same for the variant in which the second bottle is replaced by 
+	a bottle that can hold 80 units, and all the rest remains the same.
+	\item Do the same for the variant in which the third bottle is replaced by a
+	bottle that can hold 28 units, and all the rest (including the capacity of 
+	72 of the second bottle) remains the same.
+\end{enumerate}
+
+\subsubsection*{model}
+The problem can be modeled in Yices in the following way:
+
+We introduce $3*m$ variables, one for the contents of each bottle in timestep 
+$n$ where $m$ is the total number of timesteps to consider.
+
+\begin{itemize}
+\item $c\_x\_n$ for $x \in B$ and $n = 1 \ldots m$
+\end{itemize}
+
+We also assume a function $max(x)$ which yields the maximum contents of bottle
+$x$, i.e. $max(1) = 144$. $B$ will be the set of all bottles, i.e. $\{1,2,3\}$.
+
+The following formulas describe the constraints of the model.
+
+\vspace{3mm}
+
+All bottles should contain at least no water, and at max their maximum capacity
+at any given timestep.
+\begin{equation}
+	\bigwedge_{x \in B} \bigwedge_{n \in \{1\ldots m\}} 
+							0 \leq c\_x\_n \leq max(x)
+\end{equation}
+ 
+\vspace{3mm}
+
+All bottles should contain the correct amount of water in the first timestep:
+\begin{equation}
+	c\_1\_1 = 3 \wedge c\_2\_1 = 0 \wedge c\_3\_1 = 0
+\end{equation}
+
+\vspace{3mm}
+
+The model satisfies the condition if at any given timestep the bottles contain
+the required contents:
+\begin{equation}
+	\bigvee_{n \in \{2\ldots m\}} c\_1\_n = 8 \wedge c\_2\_n = 11
+\end{equation}
+
+This model can trivially be extended for $n$ bottles. 
+
+\subsubsection*{Discussion}
+We have constructed two different models, one in Yices and one for NuSMV. 
+
+NuSMV might seem to be a better tool to model the problem at first hand. However
+do to poor experiences with the tool in the past the problem is modeled for 
+YICES. This model is fast enough for assignment (a).
+
+\end{document}
