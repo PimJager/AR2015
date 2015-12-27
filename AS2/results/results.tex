@@ -47,52 +47,170 @@ The following actions may be performed any number of times:
 	72 of the second bottle) remains the same.
 \end{enumerate}
 
-\subsubsection*{model}
-The problem can be modeled in Yices in the following way:
+\subsubsection*{Model}
+The problem can trivially be modeled as LTL for NuSMV. The equations below are 
+written in a quantified pseudo language which resembles NuSMVs syntax and by 
+expanding the quantifiers can be expanded to a NuSMV program. 
 
-We introduce $3*m$ variables, one for the contents of each bottle in timestep 
-$n$ where $m$ is the total number of timesteps to consider.
+\vspace{1mm}
 
-\begin{itemize}
-\item $c\_x\_n$ for $x \in B$ and $n = 1 \ldots m$
-\end{itemize}
+The amount of water in each bottle is modeled using a variable $c_{xn}$ where 
+$x$ is the number of the bottle and $n$ counts the timesteps. The value of 
+$c_{xn}$ ranges 
+from the bottle being empty (0) to the bottle begin at max capacity, for this we
+assume a function $max(x)$ which yields the maximum capacity of the bottle 
+$x$, i.e. $max(1) = 144$.
 
-We also assume a function $max(x)$ which yields the maximum contents of bottle
-$x$, i.e. $max(1) = 144$. $B$ will be the set of all bottles, i.e. $\{1,2,3\}$.
-
-The following formulas describe the constraints of the model.
-
-\vspace{3mm}
-
-All bottles should contain at least no water, and at max their maximum capacity
-at any given timestep.
-\begin{equation}
-	\bigwedge_{x \in B} \bigwedge_{n \in \{1\ldots m\}} 
-							0 \leq c\_x\_n \leq max(x)
-\end{equation}
- 
-\vspace{3mm}
-
-All bottles should contain the correct amount of water in the first timestep:
-\begin{equation}
-	c\_1\_1 = 3 \wedge c\_2\_1 = 0 \wedge c\_3\_1 = 0
-\end{equation}
+And for all these contents the initial value has to be set, for this we assume
+a function $init(x)$ which yields the initial contents of the bottle $x$, i.e. 
+$init(1) = 3$.
+\begin{align*}
+		&\forall_{x \in \{1,2,3\}} c_{xn} : 0 \ldots max(x) \\  
+		&\bigwedge_{x \in \{1,2,3\}} c_{x0} = init(x)
+\end{align*}
 
 \vspace{3mm}
 
-The model satisfies the condition if at any given timestep the bottles contain
-the required contents:
-\begin{equation}
-	\bigvee_{n \in \{2\ldots m\}} c\_1\_n = 8 \wedge c\_2\_n = 11
+The following transition function defines that at each timestep one of the three
+actions described above could be done to one of the three bottles:
+\begin{align*}
+	\bigvee_{x \in \{1,2,3\}} &  \\  
+		 	&\left( 
+		 		(c_{x(n+1)} = max(x) \vee x_{x(n+1)} = 0) 
+		 			\wedge 
+		 			\left(\bigwedge_{y \in \{1,2,3\} \setminus \{x\}} 
+		 				c_{y(n+1)} = c_{yn}\right)
+ 			 \right) \\  
+ 			 &\vee \\  
+ 			 &\bigvee_{y \in \{1,2,3\} \setminus \{x\}} 
+ 			   	\Big(\\  
+ 			 		&case\\  
+ 			 		&c_{xn} + x_{yn} \leq max(x) \to 
+ 			 			c_{x(n+1)} = (c_{xn} + x_{yn}) \wedge c_{y(n+1)} = 0 
+ 			 				\wedge \bigwedge_{z \in \{1,2,3\} \setminus \{x,y\}}
+ 			 					c_{z(n+1)} = c_{zn}\\  
+ 			 		&otherwise  \to
+ 			 			c_{x(n+1)} = max(x) \wedge 
+			 			c_{y(n+1)} = c_{yn} - (max(x) - c_{xn}) \wedge 
+			 			\bigwedge_{z \in \{1,2,3\} \setminus \{x,y\}}
+			 				c_{z(n+1)} = c_{zn}\\  
+ 			 		&esac\\  
+ 			 	\Big)
+\end{align*}
+
+\vspace{3mm}
+
+To find if it is possible to reach the desired bottle contents we ask NuSMV to 
+prove that the this desired state is never reached. That is, the following 
+formula should hold for every n (globally).
+\begin{equation} \label{eq:ltlspec}
+	\neg (c_{1n} = 8 \wedge c_{2n} = 11)
 \end{equation}
+If NuSMV finds a sequence that violates this formula, and thus reaches our
+desired state, it will show this sequence. 
 
-This model can trivially be extended for $n$ bottles. 
+\subsubsection*{solution (a)}
+If we specify the $max(x)$ as follows:
+\begin{equation*}
+max(x) = 
+	\begin{cases}
+		144 & x = 1\\  
+		72 	& x = 2\\  
+		16	& x = 3\\  
+	\end{cases}
+\end{equation*}
+NuSMV indeed finds a sequence that shows that it is possible to have 8 units in 
+bottle 1 and 11 units in bottle 2 in under second. This sequence is shown
+in the table below.
 
-\subsubsection*{Discussion}
-We have constructed two different models, one in Yices and one for NuSMV. 
+\begin{tabular}{|l|l|l|l|}
+	\hline	
+	n & bottle 1	& bottle 2 	& bottle 3 	\\  
+	\hline \hline
+	1 & 3	& 0		& 0 \\  
+	2 &  	& 72	&   \\  
+	3 & 75  & 0		&   \\   	
+	4 & 59	& 		& 16 \\  
+	5 & 	& 16	& 0 \\  
+	6 & 43 	&   	& 16 \\  
+	7 & 	& 32	&   \\  
+	8 & 27	& 		&   \\  
+	9 & 	& 48	& 0 \\  
+	10& 	& 		& 16 \\  
+	11&     & 64	& 0 \\  
+	12& 11	& 		& 16 \\  
+	13&   	& 72	& 8 \\  
+	14&  	& 0		&   \\  
+	15& 0 	& 11	&   \\  
+	16& 8	& 		& 0 \\  
+	\hline
+	  & 8	& 11	& 0 \\  
+	\hline
+\end{tabular}
 
-NuSMV might seem to be a better tool to model the problem at first hand. However
-do to poor experiences with the tool in the past the problem is modeled for 
-YICES. This model is fast enough for assignment (a).
+\subsubsection*{Solution (b)}
+Similar to (a) we define the $max(x)$ function as follows:
+\begin{equation*}
+max(x) = 
+	\begin{cases}
+		144 & x = 1\\  
+		80 	& x = 2\\  
+		16	& x = 3\\  
+	\end{cases}
+\end{equation*}
+NuSMV determines in under a seconds that our specification is true. That is, 
+formula~\ref{eq:ltlspec} holds for every $n$ and it is not possible to have the 
+desired amounts in bottle 1 and 2.
+
+\subsubsection*{Solution (c)}
+Similar to (a) we define the $max(x)$ function as follows:
+\begin{equation*}
+max(x) = 
+	\begin{cases}
+		144 & x = 1\\  
+		72 	& x = 2\\  
+		28	& x = 3\\  
+	\end{cases}
+\end{equation*}
+NuSMV finds a sequence that shows our specification is false, thus that is it is
+possible to reach the desired state, in just over a second. The table below 
+shows this sequence.
+
+\begin{tabular}{|l|l|l|l|}
+	\hline	
+	n & bottle 1	& bottle 2 	& bottle 3 	\\  
+	\hline \hline
+	1 & 3	& 0		& 0 \\  
+	2 & 0	& 3		&   \\  
+	3 & 144	& 		&	 \\  
+	4 & 116 & 		& 28 \\  
+	5 &  	& 31 	& 0 \\  
+	6 & 88 	& 		& 28 \\  
+	7 & 	& 59	& 0 \\  
+	8 & 60	& 		& 28 \\  
+	9 & 	& 72	& 15 \\  
+	10& 143	&		& 0 \\  
+	11& 	& 15	& 0 \\  
+	12& 104	&		& 28 \\  
+	13& 	& 43	& 0	\\  
+	14& 76	& 		& 28 \\  
+	15&		& 71	& 0 \\  
+	16& 48	& 		& 28 \\
+	17&		& 72	& 27 \\  
+	18& 120 & 0		&  \\  
+	19& 	& 27	& 0 \\  
+	20& 92	& 		& 28 \\  
+	21&		& 55 	& 0 \\  
+	22& 64	& 		& 28 \\  
+	23& 	& 72	& 11 \\  
+	24& 	& 0		&	\\  
+	25&		& 11	& 0 \\  
+	26& 36	&		& 28 \\  
+	27& 	&		& 0 \\  
+	28& 8	&		& 28 \\  
+	\hline
+	  & 8	& 11	& 28 \\  
+	\hline
+\end{tabular}
 
 \end{document}
