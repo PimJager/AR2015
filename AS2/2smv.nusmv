@@ -1,0 +1,41 @@
+MODULE main 
+VAR
+c1 : 0..144;
+c2 : 0..72;
+c3 : 0..28;
+INIT
+  c1 = 3 
+& c2 = 0
+& c3 = 0
+TRANS
+    (next(c1) = 144 & next(c2) = c2 & next(c3) = c3)
+|   (next(c1) = c1 & next(c2) = 72 & next(c3) = c3)
+|   (next(c1) = c1 & next(c2) = c2 & next(c3) = 28)
+|   (next(c1) = 0 & next(c2) = c2 & next(c3) = c3)
+|   (next(c1) = c1 & next(c2) = 0 & next(c3) = c3)
+|   (next(c1) = c1 & next(c2) = c2 & next(c3) = 0)
+|   case 
+        (c1 + c2) <= 144 : next(c1) = (c1 + c2) & next(c2) = 0 & next(c3) = c3;
+        TRUE             : next(c1) = 144 & next(c2) = (c2 - (144 - c1)) & next(c3) = c3;
+    esac
+|   case 
+        (c1 + c3) <= 144 : next(c1) = (c1 + c3) & next(c3) = 0 & next(c2) = c2;
+        TRUE             : next(c1) = 144 & next(c3) = (c3 - (144 - c1)) & next(c2) = c2;
+    esac
+|   case 
+        (c2 + c1) <= 72  : next(c2) = (c2 + c1) & next(c1) = 0 & next(c3) = c3;
+        TRUE             : next(c2) = 72 & next(c1) = (c1 - (72 - c2)) & next(c3) = c3;
+    esac
+|   case 
+        (c2 + c3) <= 72  : next(c2) = (c2 + c3) & next(c3) = 0 & next(c1) = c1;
+        TRUE             : next(c2) = 72 & next(c3) = (c3 - (72 - c2)) & next(c1) = c1;
+    esac
+|   case 
+        (c3 + c1) <= 28  : next(c3) = (c3 + c1) & next(c1) = 0 & next(c2) = c2;
+        TRUE             : next(c3) = 28 & next(c1) = (c1 - (28 - c3)) & next(c2) = c2;
+    esac
+|   case 
+        (c3 + c2) <= 28  : next(c3) = (c3 + c2) & next(c2) = 0 & next(c1) = c1;
+        TRUE             : next(c3) = 28 & next(c2) = (c2 - (28 - c3)) & next(c1) = c1;
+    esac
+LTLSPEC G !(c1=8 & c2=11)
