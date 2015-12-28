@@ -3,7 +3,7 @@
 {-# LANGUAGE FlexibleInstances #-}
 {-# LANGUAGE OverloadedStrings #-}
 
-module Yices where
+module Data.Text.Yices where
 
 import Prelude hiding (print, and, or)
 import Control.Monad
@@ -39,7 +39,7 @@ class Ite x where
     ite :: x Bool -> x a -> x a -> x a
 class (Arith a, Compare a, AndOr a, Ite a) => Expr a
 
-data Program x = Program {vars :: [Var], program :: [x Bool]}
+data Program x = Program {vars :: [Var], program :: [x Bool], results :: [T.Text]}
 data Var = I T.Text | B T.Text
 
 type Print = State PrinterState
@@ -50,7 +50,7 @@ instance (Num a, Show a) => Num (Print a) where
     --we really only care about fromInteger
     fromInteger = lit . fromInteger
     negate      = neg
-    abs         = Yices.abs
+    abs         = Data.Text.Yices.abs
     signum      = undefined --scrw this
     (+)         = (+:) 
     (-)         = (-:)
@@ -93,15 +93,16 @@ instance AndOr Print where
     or xs      = printCommutative "or" xs >> return False
 printCommutative :: T.Text -> [Print a] -> Print ()
 printCommutative op xs = do
-        printTabs >> print "(" >> print op >> print "\n"
+        print "(" >> print op >> print "\n"
         modify (\s -> s{ident = ident s + 1})
         mapM_ (\x -> printTabs >> x >> print "\n") xs
         modify (\s -> s{ident = ident s - 1})
         printTabs >> print ")"
 instance Ite Print where
     ite c t e   = do 
-        printTabs >> print "(ite " >> print "\n"
+        print "(ite " >> print "\n"
         modify (\s -> s{ident = ident s + 1})
+        printTabs >> c >> print "\n"
         printTabs 
         ret <- t 
         print "\n"
@@ -122,12 +123,12 @@ showVars' :: T.Text -> [Var] -> T.Text
 showVars' c []       = c
 showVars' c (v:vs) = showVars' (c <<< "(define "<<<getKey v<<<"::"<<<getType v<<<")\n") vs
 
-showModel :: [Var] -> T.Text
+showModel :: [T.Text] -> T.Text
 showModel vs = "(check)\n" <<< showModel' T.empty vs
-showModel' :: T.Text -> [Var] -> T.Text
+showModel' :: T.Text -> [T.Text] -> T.Text
 showModel' c []     = c
 showModel' c (v:vs) = showModel' 
-                        (c <<< "(echo \""<<<getKey v<<<": \") (eval "<<<getKey v<<<")\n")
+                        (c <<< "(echo \""<<<v<<<": \") (eval "<<<v<<<")\n")
                         vs
 
 getKey (I k) = k
@@ -140,7 +141,7 @@ showProgram p =    showVars (vars p)
                 <<< "(assert(and\n" 
                 <<< foldr (\e c -> showExpr e <<< "\n" <<< c) T.empty (program p) 
                 <<< "))\n"
-                <<< showModel (vars p)
+                <<< showModel (if (null $ results p) then (map getKey (vars p)) else (results p))
 printProgram  = putStr . T.unpack . showProgram
 
 vs = ["b1", "b2", "b3"]
@@ -153,5 +154,6 @@ example = Program {
         -- one of them should be bigger than 5
         ,or $ (map (\v -> vN v >: 5) vs)
         ,vN "b1" =: 3
-    ]
+    ],
+    results = []
 }
