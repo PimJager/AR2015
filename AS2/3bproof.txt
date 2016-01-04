@@ -1,0 +1,29 @@
+============================== prooftrans ============================
+Prover9 (32) version Dec-2007, Dec 2007.
+Process 3459 was started by pimjager on Pims-MBP,
+Mon Jan  4 22:59:06 2016
+The command was "/Users/pimjager/Downloads/Prover9-Mace4-v05B.app/Contents/Resources/bin-mac-intel/prover9".
+============================== end of head ===========================
+
+============================== end of input ==========================
+
+============================== PROOF =================================
+
+% -------- Comments from original proof --------
+% Proof 1 at 0.01 (+ 0.00) seconds.
+% Length of proof is 9.
+% Level of proof is 4.
+% Maximum clause weight is 27.
+% Given clauses 4.
+
+1 (all x all y all z all u a(x,a(y,a(z,u))) = a(y,a(z,a(x,u)))) # label(non_clause).  [assumption].
+2 a(b,a(c,a(d,a(e,a(f,a(b,g)))))) = a(b,a(d,a(c,a(e,a(f,a(b,g)))))) # label(non_clause) # label(goal).  [goal].
+3 a(x,a(y,a(z,u))) = a(z,a(x,a(y,u))).  [clausify(1)].
+4 a(b,a(d,a(c,a(e,a(f,a(b,g)))))) != a(b,a(c,a(d,a(e,a(f,a(b,g)))))).  [deny(2)].
+5 a(x,a(y,a(z,a(u,a(w,v5))))) = a(u,a(x,a(y,a(w,a(z,v5))))).  [para(3(a,1),3(a,1,2,2))].
+13 a(b,a(c,a(d,a(e,a(f,a(b,g)))))) != a(b,a(d,a(c,a(b,a(e,a(f,g)))))).  [para(3(a,1),4(a,1,2,2,2)),flip(a)].
+62 a(x,a(y,a(z,a(u,a(w,a(v5,v6)))))) = a(v5,a(x,a(z,a(y,a(u,a(w,v6)))))).  [para(5(a,1),5(a,1,2))].
+79 a(d,a(b,a(c,a(e,a(f,a(b,g)))))) != a(b,a(d,a(c,a(b,a(e,a(f,g)))))).  [para(3(a,1),13(a,1))].
+80 $F.  [resolve(79,a,62,a)].
+
+============================== end of proof ==========================

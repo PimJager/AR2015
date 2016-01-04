@@ -5,9 +5,9 @@ module Main where
 import qualified Data.Text.Yices as Y
 import qualified Data.Text as T
 
-maxX = 4
-maxY = 4
-maxSteps = 3
+maxX = 10
+maxY = 10
+maxSteps = 5
 
 allCells    = [(x,y) | x<-[1..maxX], y<-[1..maxY]]
 c (x,y,s)   = T.concat ["c_", T.pack $ show $ x, "_", T.pack $ show $ y, "_", T.pack $ show $ s]
@@ -20,9 +20,11 @@ neighbours (x,y) = filter
                         [(x',y') | x'<-[x-1,x,x+1], y'<-[y-1,y,y+1]]
 
 -- cells are either living or dead
+range :: Y.Print Bool
 range  = Y.and $ map (\v -> Y.or [Y.vN v Y.=: 0, Y.vN v Y.=: 1]) (vars [1..maxSteps])
 
 -- all cells should be dead at the last iteration
+allDead :: Y.Print Bool
 allDead = Y.and $ map (\v -> Y.vN v Y.=: 0) (vars [maxSteps])
 
 --help variables for the number of living neighbours
@@ -66,11 +68,15 @@ ruleStarve s = Y.and $ map (\(x,y) -> Y.ite
                             )
                             allCells
 
+sat :: Y.Print Bool
+sat = Y.and $ map (\v -> Y.vN v Y.=: 1) $ map (\(x,y) -> c (x,y,maxSteps)) [(3,3),(3,4),(4,3),(4,4)]
+
 prog = Y.Program {
     Y.vars = map Y.I (vars [1..maxSteps]) ++ map Y.I neighVars,
     Y.program = [
          range
-        ,allDead
+        --,allDead
+        ,sat
         ,Y.and $ map livingNeighbours [2..maxSteps]
         ,Y.and $ map ruleLonely [2..maxSteps]
         ,Y.and $ map ruleSurvive [2..maxSteps]

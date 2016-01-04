@@ -1,0 +1,91 @@
+============================== prooftrans ============================
+Prover9 (32) version Dec-2007, Dec 2007.
+Process 3349 was started by pimjager on Pims-MBP,
+Mon Jan  4 22:10:40 2016
+The command was "/Users/pimjager/Downloads/Prover9-Mace4-v05B.app/Contents/Resources/bin-mac-intel/prover9".
+============================== end of head ===========================
+
+============================== end of input ==========================
+
+============================== PROOF =================================
+
+% -------- Comments from original proof --------
+% Proof 1 at 0.00 (+ 0.00) seconds.
+% Length of proof is 14.
+% Level of proof is 6.
+% Maximum clause weight is 11.
+% Given clauses 11.
+
+1 (all x all y all z x * (y * z) = (x * y) * z) # label(non_clause).  [assumption].
+2 (all x x * I = x) # label(non_clause).  [assumption].
+3 (all x x * inv(x) = I) # label(non_clause).  [assumption].
+4 (all x I * x = x) # label(non_clause) # label(goal).  [goal].
+8 (x * y) * z = x * (y * z).  [clausify(1)].
+9 x * I = x.  [clausify(2)].
+10 x * inv(x) = I.  [clausify(3)].
+11 I * c1 != c1.  [deny(4)].
+15 x * (I * y) = x * y.  [para(9(a,1),8(a,1,1)),flip(a)].
+16 x * (inv(x) * y) = I * y.  [para(10(a,1),8(a,1,1)),flip(a)].
+21 I * inv(inv(x)) = x.  [para(10(a,1),16(a,1,2)),rewrite([9(2)]),flip(a)].
+23 x * inv(inv(y)) = x * y.  [para(21(a,1),8(a,2,2)),rewrite([9(2)])].
+24 I * x = x.  [para(21(a,1),15(a,2)),rewrite([23(5),15(4)])].
+25 $F.  [resolve(24,a,11,a)].
+
+============================== end of proof ==========================
+
+============================== PROOF =================================
+
+% -------- Comments from original proof --------
+% Proof 2 at 0.00 (+ 0.00) seconds.
+% Length of proof is 16.
+% Level of proof is 8.
+% Maximum clause weight is 11.
+% Given clauses 15.
+
+1 (all x all y all z x * (y * z) = (x * y) * z) # label(non_clause).  [assumption].
+2 (all x x * I = x) # label(non_clause).  [assumption].
+3 (all x x * inv(x) = I) # label(non_clause).  [assumption].
+5 (all x inv(inv(x)) = x) # label(non_clause) # label(goal).  [goal].
+8 (x * y) * z = x * (y * z).  [clausify(1)].
+9 x * I = x.  [clausify(2)].
+10 x * inv(x) = I.  [clausify(3)].
+12 inv(inv(c2)) != c2.  [deny(5)].
+15 x * (I * y) = x * y.  [para(9(a,1),8(a,1,1)),flip(a)].
+16 x * (inv(x) * y) = I * y.  [para(10(a,1),8(a,1,1)),flip(a)].
+21 I * inv(inv(x)) = x.  [para(10(a,1),16(a,1,2)),rewrite([9(2)]),flip(a)].
+23 x * inv(inv(y)) = x * y.  [para(21(a,1),8(a,2,2)),rewrite([9(2)])].
+24 I * x = x.  [para(21(a,1),15(a,2)),rewrite([23(5),15(4)])].
+28 x * (inv(x) * y) = y.  [back_rewrite(16),rewrite([24(5)])].
+32 inv(inv(x)) = x.  [para(10(a,1),28(a,1,2)),rewrite([9(2)]),flip(a)].
+33 $F.  [resolve(32,a,12,a)].
+
+============================== end of proof ==========================
+
+============================== PROOF =================================
+
+% -------- Comments from original proof --------
+% Proof 3 at 0.00 (+ 0.00) seconds.
+% Length of proof is 17.
+% Level of proof is 9.
+% Maximum clause weight is 11.
+% Given clauses 16.
+
+1 (all x all y all z x * (y * z) = (x * y) * z) # label(non_clause).  [assumption].
+2 (all x x * I = x) # label(non_clause).  [assumption].
+3 (all x x * inv(x) = I) # label(non_clause).  [assumption].
+6 (all x inv(x) * x = I) # label(non_clause) # label(goal).  [goal].
+8 (x * y) * z = x * (y * z).  [clausify(1)].
+9 x * I = x.  [clausify(2)].
+10 x * inv(x) = I.  [clausify(3)].
+13 inv(c3) * c3 != I.  [deny(6)].
+15 x * (I * y) = x * y.  [para(9(a,1),8(a,1,1)),flip(a)].
+16 x * (inv(x) * y) = I * y.  [para(10(a,1),8(a,1,1)),flip(a)].
+21 I * inv(inv(x)) = x.  [para(10(a,1),16(a,1,2)),rewrite([9(2)]),flip(a)].
+23 x * inv(inv(y)) = x * y.  [para(21(a,1),8(a,2,2)),rewrite([9(2)])].
+24 I * x = x.  [para(21(a,1),15(a,2)),rewrite([23(5),15(4)])].
+28 x * (inv(x) * y) = y.  [back_rewrite(16),rewrite([24(5)])].
+32 inv(inv(x)) = x.  [para(10(a,1),28(a,1,2)),rewrite([9(2)]),flip(a)].
+36 inv(x) * x = I.  [para(32(a,1),10(a,1,2))].
+37 $F.  [resolve(36,a,13,a)].
+
+============================== end of proof ==========================
