@@ -142,7 +142,11 @@ showProgram p =    showVars (vars p)
                 <<< foldr (\e c -> showExpr e <<< "\n" <<< c) T.empty (program p) 
                 <<< "))\n"
                 <<< showModel (if (null $ results p) then (map getKey (vars p)) else (results p))
-printProgram  = putStr . T.unpack . showProgram
+printProgram  = putStr . T.unpack . post . showProgram
+
+post :: T.Text -> T.Text
+post i = T.replace "True" "true" $ T.replace "False" "false" i -- sorry
+
 
 vs = ["b1", "b2", "b3"]
 example :: Program Print

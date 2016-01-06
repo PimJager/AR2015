@@ -79,11 +79,16 @@ $init(1) = 3$.
 \vspace{3mm}
 
 The following transition function defines that at each timestep one of the three
-actions described above could be done to one of the three bottles:
-\begin{align*}
+actions described above could be done to one of the three bottles. (2) 
+describes the action of emptying or filling bottle $c_x$ and not touching the 
+other two bottles. (5) to (8) describe pouring the contents of bottle $c_y$
+ into 
+$c_x$ if it fits completely (6) or partially (7) and not touching the remaining
+bottle $c_z$.
+\begin{align}
     \bigvee_{x \in \{1,2,3\}} &  \\  
             &\left( 
-                (c_{x(n+1)} = max(x) \vee x_{x(n+1)} = 0) 
+                (c_{x(n+1)} = max(x) \vee c_{x(n+1)} = 0) 
                     \wedge 
                     \left(\bigwedge_{y \in \{1,2,3\} \setminus \{x\}} 
                         c_{y(n+1)} = c_{yn}\right)
@@ -92,8 +97,8 @@ actions described above could be done to one of the three bottles:
              &\bigvee_{y \in \{1,2,3\} \setminus \{x\}} 
                 \Big(\\  
                     &case\\  
-                    &c_{xn} + x_{yn} \leq max(x) \to 
-                        c_{x(n+1)} = (c_{xn} + x_{yn}) \wedge c_{y(n+1)} = 0 
+                    &c_{xn} + c_{yn} \leq max(x) \to 
+                        c_{x(n+1)} = (c_{xn} + c_{yn}) \wedge c_{y(n+1)} = 0 
                             \wedge \bigwedge_{z \in \{1,2,3\} \setminus \{x,y\}}
                                 c_{z(n+1)} = c_{zn}\\  
                     &otherwise  \to
@@ -103,7 +108,7 @@ actions described above could be done to one of the three bottles:
                             c_{z(n+1)} = c_{zn}\\  
                     &esac\\  
                 \Big)
-\end{align*}
+\end{align}
 
 \vspace{3mm}
 
@@ -220,7 +225,7 @@ shows this sequence.
     \hline
 \end{tabular}
 
-\subsubsection*{3. Groups and Rewriting}
+\subsection*{3. Groups and Rewriting}
 % https://www.cs.unm.edu/~mccune/prover9/manual/Dec-2007/output.html
 \paragraph{(a)} 
 \textit{In mathematics, a group is defined to be a set $G$ with an 
@@ -243,15 +248,15 @@ that all elements referenced in the law are universally quantified using the
 \begin{equation*}
     I * x = x
 \end{equation*}
-This property is trivially written in the syntax (once again, taking care to 
-universally quantify $x$). Prover9 finds a proof by contradiction: 
+This property is trivially written as goal in the syntax (once again, taking 
+care to universally quantify $x$). Prover9 finds a proof by contradiction: 
 
 \begin{lstlisting}
 1  (all x all y all z x * (y * z) = (x * y) * z)    [assumption].§\footnotemark§ 
 §\footnotetext{
-More on the meaning of the justification (the part between square brackets) can
+More on the meaning of the justification can 
 be found on the Prover9 website: 
-https://www.cs.unm.edu/~mccune/prover9/manual/Dec-2007/output.html under
+https://www.cs.unm.edu/~mccune/prover9/manual/Dec-2007/output.html under 
 `Clause Justification'.}§
 2  (all x x * I = x)                                [assumption].
 3  (all x x * inv(x) = I)                           [assumption].
@@ -274,8 +279,8 @@ https://www.cs.unm.edu/~mccune/prover9/manual/Dec-2007/output.html under
 \begin{equation*}
     inv(inv(x)) = x
 \end{equation*}
-This property is trivially written in the syntax (once again, taking care to 
-universally quantify $x$). Prover9 finds a proof by contradiction:
+This property is trivially written as goal in the syntax (once again, taking 
+care to universally quantify $x$). Prover9 finds a proof by contradiction: 
 
 \begin{lstlisting}
 1  (all x all y all z x * (y * z) = (x * y) * z)    [assumption].
@@ -301,8 +306,8 @@ universally quantify $x$). Prover9 finds a proof by contradiction:
 \begin{equation*}
     inv(x) * x = I
 \end{equation*}
-This property is trivially written in the syntax (once again, taking care to 
-universally quantify $x$). Prover9 finds a proof by contradiction:
+This property is trivially written as goal in the syntax (once again, taking 
+care to universally quantify $x$). Prover9 finds a proof by contradiction: 
 
 \begin{lstlisting}
 1  (all x all y all z x * (y * z) = (x * y) * z)    [assumption].
@@ -328,8 +333,9 @@ universally quantify $x$). Prover9 finds a proof by contradiction:
 \begin{equation*}
     x * y = y * x
 \end{equation*}
-Prover9 can't find a proof for this. Running the same file through Mace4 gives 
-counterexample listed below:
+This property is trivially written as goal in the syntax (once again, taking 
+care to universally quantify $x$ and $y$). Prover9 can't find a proof for this. 
+Running the same file through Mace4 gives the counterexample listed below:
 
 \begin{table}[H]  \centering % size 6
 G: \{0,1,2,3,4,5\} \hspace{.5cm}
@@ -377,7 +383,175 @@ proof by contradiction:
 13 a(b,a(c,a(d,a(e,a(f,a(b,g)))))) != a(b,a(d,a(c,a(b,a(e,a(f,g)))))).[para(3(a,1),4(a,1,2,2,2)),flip(a)].
 62 a(x,a(y,a(z,a(u,a(w,a(v5,v6)))))) = a(v5,a(x,a(z,a(y,a(u,a(w,v6)))))).[para(5(a,1),5(a,1,2))].
 79 a(d,a(b,a(c,a(e,a(f,a(b,g)))))) != a(b,a(d,a(c,a(b,a(e,a(f,g)))))).  [para(3(a,1),13(a,1))].
+80 $F.                                                                  [resolve(79,a,62,a)].
 \end{lstlisting}
 
+\subsection*{4. Game of Life}
+Game of Life is a mathematics game designed by Conway in the 1970's
+\footnote{Scientific American 223. pp. 120–123. ISBN 0-89454-001-7. }. The game
+ consists of an $n*m$ grid of `cells', which are 
+either alive or dead, and progress through discrete timesteps, or iterations.
+Whether a cell is dead or alive in an iteration is based upon the state of its 
+eight neighbouring cells in the iteration before. The following four simple rules
+decide if a cell is alive in the next iteration:
+
+\begin{enumerate}
+    \item A cell dies if less then two of its neighbours are alive
+    \item A cell survives if two of its neighbours are alive
+    \item A cell is born (or survives) if three of it neighbours are alive
+    \item A cell dies if four or more of its neighbours are alive
+\end{enumerate}
+
+We aim to investigate different models for the game of life and discuss their
+performance. To do so we create a model of the game of life and then use that 
+model to decide on a starting configuration which yields at least $16$ living 
+cells after $k$ steps on a $5x5$ grid. We run these tests on a laptop with 
+2,6Ghz Intel Core i5 processor and 8GB or RAM.
+
+\subsubsection*{Model (a)}
+We model the game in YICES using two major sets of variables:
+\begin{itemize}
+    \item whether a cell is dead or alive in a
+        certain iteration, described by an Integer variable which is either 
+        $1$ (alive) or $0$ (dead).
+    \item how much neighbours of a cell were alive in the previous iteration.
+\end{itemize}
+
+For this we introduce $n*m*k + n*m*(k-1)$ variables. 
+$c_{xyi}$ for the status of a cell
+at position $(x,y)$ at iteration $i$ -with $1 \leq x \leq n$ and $1 \leq y 
+\leq m$ and $1 \leq i \leq k$- and $n_{xyi}$ -with $1 \leq x \leq n$ and 
+$1 \leq y \leq m$ and $2 \leq i \leq k$-for the number of neighbours
+alive at iteration $i-1$. 
+
+We call $C$ the set of all cells, that is 
+$\{(x,y) | 1 \leq x \leq n, 1 \leq y \leq m\}$ and $S$ the
+set of all steps, that is $\{0 \ldots k\}$. $nb((x,y))$ is a function that 
+yields a set of the neighbours of a specific cell at position $(x,y)$.\\  
+
+All cell values should always be either $1$ or $0$:
+\begin{equation*}
+    \bigwedge_{(x,y) \in C} \bigwedge_{i \in S} c_{xyi} = 0 \vee c_{xyi} = 1
+\end{equation*}
+
+\vspace{3mm}
+
+The number of alive neighbours needs to be set for each cell at each timestep:
+\begin{equation}
+    \bigwedge_{(x,y) \in C} \bigwedge_{i \in S \setminus \{1\}} 
+        n_{xyi} = \sum_{(x',y') \in nb((x,y))} c_{x'y'(i-1)}
+\end{equation}
+
+\vspace{3mm}
+
+Depending on the number of alive neighbours in the previous iteration the
+cells state needs to be updated:
+\begin{equation}
+\begin{aligned}
+    \bigwedge_{(x,y) \in C} \bigwedge_{i \in S \setminus \{1\}} 
+        \mathtt{case~} n_{xyi} &\mathtt{~of }\\   
+        &< 2 \to c_{xyi} = 0\\  
+        &= 2 \to c_{xyi} = c_{xy(i-1)}\\  
+        &= 3 \to c_{xyi} = 1\\  
+        &\geq 4 \to c_{xyi} = 0
+\end{aligned}
+\end{equation}
+
+\vspace{3mm}
+
+Finally the final condition, at least 16 cells alive, should be met at the 
+last timestep (which we'll number $k$)
+
+\begin{equation*}
+	\left( \sum_{(x,y) \in C} c_{xyk} \right) \geq 16
+\end{equation*}
+
+\vspace{3mm}
+
+The complete model is the conjunction of the above formulas.
+
+\paragraph{Benchmark} Figure~\ref{fig:modart} shows the running time of model 
+(a) in seconds depending on the number of steps asked. It is obvious that the 
+model performs poorly and it appears to have a time complexity of $O(k^2)$ 
+in regard to the number of steps: $k$.
+
+We've only tested this model up seven steps, as the computation for eight steps
+did not finish within 14 minutes. 
+
+\begin{figure}
+\includegraphics[width=0.6\textwidth]{encodinga.png}
+\caption{Running time of model (a)}
+\label{fig:modart}
+\end{figure}
+
+\subsubsection*{Model (b)}
+We try and improve this result by improving the model. We almost half the
+number of variables needed by removing the need for the $n_{xyi}$ variables.\\  
+
+To do this we remove equation (11) and replace equation (12) with (13) which is
+(12) with incorporation of the calculation of the number of alive neighbours.
+
+\begin{equation}
+\begin{aligned}
+    \bigwedge_{(x,y) \in C} \bigwedge_{i \in S \setminus \{1\}} 
+        \mathtt{case~} \sum_{(x',y') \in nb((x,y))} c_{x'y'(i-1)} &\mathtt{~of }\\   
+        &< 2 \to c_{xyi} = 0\\  
+        &= 2 \to c_{xyi} = c_{xy(i-1)}\\  
+        &= 3 \to c_{xyi} = 1\\  
+        &\geq 4 \to c_{xyi} = 0
+\end{aligned}
+\end{equation}
+
+\paragraph{Benchmark} Figure~\ref{fig:modbrt} shows the performance of the new
+model. The performance has increased enormously, allowing the calculation of 
+80 steps in just over 2 minutes. The model appears to have a time complexity of
+$O(k)$ in regard to the number of steps: $k$.
+
+\begin{figure}
+\includegraphics[width=0.6\textwidth]{encodingb.png}
+\caption{Running time of model (b)}
+\label{fig:modbrt}
+\end{figure}
+
+\subsubsection*{Conclusion}
+These two models appear to indicate a huge difference in performance of YICES
+depending on the number of variables. Even though the $n_{xyi}$ variables 
+\emph{only} serve as helper variables, which would be expected to be easily 
+calculated, they have very
+significant impact on the running time of the model.
+Figure~\ref{fig:comparison} highlights this vast difference in performance.
+
+\begin{figure}
+\includegraphics[width=0.6\textwidth]{both.png}
+\caption{Comparison between model (a) and model (b)}
+\label{fig:comparison}
+\end{figure}
+
+\subsubsection*{Discussion}
+
+This experiment just shows the impact of the decrease in the number of 
+(superfluous)
+variables for this particular problem, with this particular modeling strategy 
+and is therefore rather anecdotal. It would be interesting to do experiments 
+with other models to be able to have conclusions based on more sound data.\\  
+
+Even though the author has tried as much as possible to ensure equal 
+circumstances for each test some tests might have suffered from other programs
+running on the test computer. Some measures taken were running a 
+minimum on the computer during testing (the OS + Services and Terminal running
+YICES and `time') and measuring CPU time used by the YICES process, instead of
+real time. The author is therefore confident that the results of these test are
+accurate enough for this purpose.\\  
+
+This experiment also only considers the impact of a change in the number of
+steps in the model. We do not test the impact of increasing the size of the
+grid. However, since the number of variables created in the model is linear with
+regards to $n$, $m$ and $k$ similar results would be expected when increasing
+$n$ or $m$. However when doing so one would have to take care to increase the
+goal ($16$ in our tests) in an appropriate manner, which might not be 
+trivial.
+
+Due to time constraints this has not been tested so far, but might be interesting
+for future experiments.
 
 \end{document}
